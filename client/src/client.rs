@@ -70,8 +70,8 @@ pub use sc_client_api::{
 		LockImportRun,
 	},
 	client::{
-		ImportNotifications, FinalityNotification, FinalityNotifications, BlockImportNotification,
-		ClientInfo, BlockchainEvents, BlockBackend, ProvideUncles, BadBlocks, ForkBlocks,
+		ImportNotifications, FinalityNotification, FinalityNotifications, InitialSyncBlockImportNotifications, BlockImportNotification,
+		ClientInfo, BlockchainEvents, BlockBody, ProvideUncles, BadBlocks, ForkBlocks,
 		BlockOf,
 	},
 	execution_extensions::{ExecutionExtensions, ExecutionStrategies},
@@ -95,6 +95,8 @@ pub struct Client<B, E, Block, RA> where Block: BlockT {
 	storage_notifications: Mutex<StorageNotifications<Block>>,
 	import_notification_sinks: Mutex<Vec<mpsc::UnboundedSender<BlockImportNotification<Block>>>>,
 	finality_notification_sinks: Mutex<Vec<mpsc::UnboundedSender<FinalityNotification<Block>>>>,
+	// TODO rename to OffchainWorkerReplay?
+	initial_sync_notification_sinks: Mutex<Vec<mpsc::UnboundedSender<BlockImportNotification<Block>>>>,
 	// holds the block hash currently being imported. TODO: replace this with block queue
 	importing_block: RwLock<Option<Block::Hash>>,
 	block_rules: BlockRules<Block>,
@@ -279,6 +281,7 @@ impl<B, E, Block, RA> Client<B, E, Block, RA> where
 			storage_notifications: Default::default(),
 			import_notification_sinks: Default::default(),
 			finality_notification_sinks: Default::default(),
+			initial_sync_notification_sinks: Default::default(),
 			importing_block: Default::default(),
 			block_rules: BlockRules::new(fork_blocks, bad_blocks),
 			execution_extensions,
@@ -754,7 +757,24 @@ impl<B, E, Block, RA> Client<B, E, Block, RA> where
 				is_new_best,
 				storage_changes,
 				retracted,
-			})
+			});
+		} else {
+			match origin {
+				// send a notification for the offchain workers
+				// which would not be notifice in the network initial sync
+				// case otherwise (see previous origin match statement)
+				BlockOrigin::NetworkInitialSync => {
+					self.notify_initial_sync_imported(ImportSummary {
+						hash,
+						origin,
+						header: import_headers.into_post(),
+						is_new_best,
+						storage_changes,
+						retracted,
+					})?;
+				},
+				_ => {}
+			}
 		}
 
 		Ok(ImportResult::imported(is_new_best))
@@ -966,6 +986,31 @@ impl<B, E, Block, RA> Client<B, E, Block, RA> where
 		};
 
 		self.import_notification_sinks.lock()
+			.retain(|sink| sink.unbounded_send(notification.clone()).is_ok());
+
+		Ok(())
+	}
+
+	fn notify_initial_sync_imported(&self, notify_import: ImportSummary<Block>) -> sp_blockchain::Result<()> {
+		if let Some(storage_changes) = notify_import.storage_changes {
+			// TODO [ToDr] How to handle re-orgs? Should we re-emit all storage changes?
+			self.storage_notifications.lock()
+				.trigger(
+					&notify_import.hash,
+					storage_changes.0.into_iter(),
+					storage_changes.1.into_iter().map(|(sk, v)| (sk, v.into_iter())),
+				);
+		}
+
+		let notification = BlockImportNotification::<Block> {
+			hash: notify_import.hash,
+			origin: notify_import.origin,
+			header: notify_import.header,
+			is_new_best: notify_import.is_new_best,
+			retracted: notify_import.retracted,
+		};
+
+		self.initial_sync_notification_sinks.lock()
 			.retain(|sink| sink.unbounded_send(notification.clone()).is_ok());
 
 		Ok(())
@@ -1772,6 +1817,12 @@ where
 	fn finality_notification_stream(&self) -> FinalityNotifications<Block> {
 		let (sink, stream) = mpsc::unbounded();
 		self.finality_notification_sinks.lock().push(sink);
+		stream
+	}
+
+	fn initial_sync_import_notification_stream(&self) -> InitialSyncBlockImportNotifications<Block> {
+		let (sink, stream) = mpsc::unbounded();
+		self.initial_sync_notification_sinks.lock().push(sink);
 		stream
 	}
 

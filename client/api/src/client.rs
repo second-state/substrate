@@ -36,6 +36,10 @@ pub type ImportNotifications<Block> = mpsc::UnboundedReceiver<BlockImportNotific
 /// A stream of block finality notifications.
 pub type FinalityNotifications<Block> = mpsc::UnboundedReceiver<FinalityNotification<Block>>;
 
+
+/// A stream of block finality notifications during the initial sync.
+pub type InitialSyncBlockImportNotifications<Block> = mpsc::UnboundedReceiver<BlockImportNotification<Block>>;
+
 /// Expected hashes of blocks at given heights.
 ///
 /// This may be used as chain spec extension to set trusted checkpoints, i.e.
@@ -63,6 +67,9 @@ pub trait BlockchainEvents<Block: BlockT> {
 	/// Get a stream of finality notifications. Not guaranteed to be fired for every
 	/// finalized block.
 	fn finality_notification_stream(&self) -> FinalityNotifications<Block>;
+
+	/// Get a stream of finality notification originating from the initial block import
+	fn initial_sync_import_notification_stream(&self) -> InitialSyncBlockImportNotifications<Block>;
 
 	/// Get storage changes event stream.
 	///

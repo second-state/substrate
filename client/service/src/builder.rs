@@ -916,17 +916,20 @@ ServiceBuilder<
 			let is_validator = config.roles.is_authority();
 
 			let (import_stream, finality_stream) = (
-				client.import_notification_stream().map(|n| ChainEvent::NewBlock {
-					id: BlockId::Hash(n.hash),
-					header: n.header,
-					retracted: n.retracted,
-					is_new_best: n.is_new_best,
-				}),
+				futures::stream::select(client.import_notification_stream(), client.initial_sync_import_notification_stream())
+					.map(|n| ChainEvent::NewBlock {
+						id: BlockId::Hash(n.hash),
+						header: n.header,
+						retracted: n.retracted,
+						is_new_best: n.is_new_best,
+					}),
 				client.finality_notification_stream().map(|n| ChainEvent::Finalized {
 					hash: n.hash
-				})
+				}),
 			);
-			let events = futures::stream::select(import_stream, finality_stream)
+
+			// process block import and block finalization events
+			let events = futures::stream::select(import_stream, finality_stream )
 				.for_each(move |event| {
 					// offchain worker is only interested in block import events
 					if let ChainEvent::NewBlock { ref header, is_new_best, .. } = event {
