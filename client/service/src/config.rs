@@ -104,7 +104,8 @@ pub struct Configuration {
 	/// The default number of 64KB pages to allocate for Wasm execution
 	pub default_heap_pages: Option<u64>,
 	/// Should offchain workers be executed.
-	pub offchain_worker: bool,
+	pub offchain_worker: OffchainWorkerConfig,
+
 	/// Sentry mode is enabled, the node's role is AUTHORITY but it should not
 	/// actively participate in consensus (i.e. no keystores should be passed to
 	/// consensus modules).
@@ -168,6 +169,14 @@ pub enum DatabaseConfig {
 
 	/// A custom implementation of an already-open database.
 	Custom(Arc<dyn KeyValueDB>),
+}
+/// Configuration of the database of the client.
+#[derive(Clone, Default)]
+pub struct OffchainWorkerConfig {
+	/// If this is allowed.
+	pub enabled: bool,
+	/// allow writes from the runtime to the offchain worker database
+	pub allow_runtime_write_to_ocw_db: bool,
 }
 
 /// Configuration of the Prometheus endpoint.
