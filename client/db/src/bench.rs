@@ -51,6 +51,7 @@ impl<Block: BlockT> sp_state_machine::Storage<HashFor<Block>> for StorageDb<Bloc
 pub struct BenchmarkingState<B: BlockT> {
 	path: PathBuf,
 	root: Cell<B::Hash>,
+	genesis_root: B::Hash,
 	state: RefCell<Option<DbState<B>>>,
 	db: Cell<Option<Arc<dyn KeyValueDB>>>,
 	genesis: <DbState<B> as StateBackend<HashFor<B>>>::Transaction,
@@ -74,6 +75,7 @@ impl<B: BlockT> BenchmarkingState<B> {
 			path,
 			root: Cell::new(root),
 			genesis: Default::default(),
+			genesis_root: Default::default(),
 		};
 
 		state.reopen()?;
@@ -87,6 +89,7 @@ impl<B: BlockT> BenchmarkingState<B> {
 			child_delta,
 		);
 		state.genesis = transaction.clone();
+		state.genesis_root = root.clone();
 		state.commit(root, transaction)?;
 		Ok(state)
 	}
@@ -273,7 +276,7 @@ impl<B: BlockT> StateBackend<HashFor<B>> for BenchmarkingState<B> {
 	fn wipe(&self) -> Result<(), Self::Error> {
 		self.kill()?;
 		self.reopen()?;
-		self.commit(self.root.get(), self.genesis.clone())?;
+		self.commit(&self.genesis_root, self.genesis.clone())?;
 		Ok(())
 	}
 }
