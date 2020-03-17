@@ -482,8 +482,8 @@ pub trait Externalities: Send {
 		buffer: &mut [u8],
 		deadline: Option<Timestamp>
 	) -> Result<usize, HttpError>;
-
 }
+
 impl<T: Externalities + ?Sized> Externalities for Box<T> {
 	fn is_validator(&self) -> bool {
 		(& **self).is_validator()
@@ -557,6 +557,7 @@ impl<T: Externalities + ?Sized> Externalities for Box<T> {
 		(&mut **self).http_response_read_body(request_id, buffer, deadline)
 	}
 }
+
 /// An `OffchainExternalities` implementation with limited capabilities.
 pub struct LimitedExternalities<T> {
 	capabilities: Capabilities,
@@ -670,6 +671,14 @@ impl<T: Externalities> Externalities for LimitedExternalities<T> {
 	}
 }
 
+
+impl<T: OffchainKVStorageAccess> OffchainKVStorageAccess for LimitedExternalities<T> {
+	fn local_ocw_storage_write_kv(&mut self, key: &[u8], value: &[u8]) {
+		self.check(Capability::OffchainWorkerDbWrite, "local_ocw_storage_write_kv");
+		self.externalities.local_ocw_storage_write_kv(key, value)
+	}
+}
+
 #[cfg(feature = "std")]
 sp_externalities::decl_extension! {
 	/// The offchain extension that will be registered at the Substrate externalities.
@@ -681,6 +690,41 @@ impl OffchainExt {
 	/// Create a new instance of `Self`.
 	pub fn new<O: Externalities + 'static>(offchain: O) -> Self {
 		Self(Box::new(offchain))
+	}
+}
+
+/// trait allowing offchain db access
+/// to replay data from on chain into the offchain
+/// db such that the executed offchain worker can
+/// then gain access to the required state information
+/// which would otherwise not be available
+pub trait OffchainKVStorageAccess : Send {
+
+	/// write a key value to the storage db
+	/// in a buffered fashion
+	fn local_ocw_storage_write_kv(&mut self, key: &[u8], value: &[u8]);
+}
+
+impl<T> OffchainKVStorageAccess for Box<T> where T: OffchainKVStorageAccess {
+	/// write a key value to the storage db
+	/// in a buffered fashion
+	fn local_ocw_storage_write_kv(&mut self, key: &[u8], value: &[u8]) {
+		(&mut **self).local_ocw_storage_write_kv(key, value)
+	}
+}
+
+
+#[cfg(feature = "std")]
+sp_externalities::decl_extension! {
+	/// The offchain extension that will be registered at the Substrate externalities.
+	pub struct OffchainIndexExt(Box<dyn OffchainKVStorageAccess>);
+}
+
+#[cfg(feature = "std")]
+impl OffchainIndexExt {
+	/// Create a new instance of `Self`.
+	pub fn new<OI: OffchainKVStorageAccess + 'static>(offchain_index: OI) -> Self {
+		Self(Box::new(offchain_index))
 	}
 }
 

@@ -88,7 +88,10 @@ pub use sp_storage as storage;
 #[doc(hidden)]
 pub use sp_std;
 
-/// Context for executing a call into the runtime.
+/// Context for executing a call from the client into the runtime.
+/// 
+/// Also provides the context (or better filter) for allowed calls from the runtime
+/// back to the client.
 pub enum ExecutionContext {
 	/// Context for general importing (including own blocks).
 	Importing,

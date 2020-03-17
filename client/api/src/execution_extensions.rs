@@ -24,7 +24,7 @@ use std::sync::{Weak, Arc};
 use codec::Decode;
 use sp_core::{
 	ExecutionContext,
-	offchain::{self, OffchainExt, TransactionPoolExt},
+	offchain::{self, OffchainExt, OffchainIndexExt, TransactionPoolExt},
 	traits::{BareCryptoStorePtr, KeystoreExt},
 };
 use sp_runtime::{
@@ -177,8 +177,16 @@ impl<Block: traits::Block> ExecutionExtensions<Block> {
 		if let ExecutionContext::OffchainCall(Some(ext)) = context {
 			extensions.register(
 				OffchainExt::new(offchain::LimitedExternalities::new(capabilities, ext.0))
-			)
+			);
 		}
+
+		extensions.register(
+			OffchainIndexExt::new(
+				offchain::LimitedExternalities::new(capabilities, Box::new(
+					OffchainKVStorageAccessX(0u8) // TODO what kind of self to we need here?
+				))
+			)
+		);
 
 		(manager, extensions)
 	}
@@ -203,3 +211,16 @@ impl<Block: traits::Block> offchain::TransactionPool for TransactionPoolAdapter<
 		self.pool.submit_at(&self.at, xt)
 	}
 }
+
+
+
+struct OffchainKVStorageAccessX(u8);
+
+
+impl offchain::OffchainKVStorageAccess for  OffchainKVStorageAccessX {
+	fn local_ocw_storage_write_kv(&mut self, key: &[u8], value: &[u8]) {
+		todo!("TO BE DISCUSSED! HOW TO ACHIEVE THIS")
+	}
+}
+
+

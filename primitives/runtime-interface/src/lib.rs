@@ -22,7 +22,7 @@
 //! maps to an external function call. These external functions are exported by the wasm executor
 //! and they map to the same implementation as the native calls.
 //!
-//! To be explicit: The runtime calls the functions provided by the generated code.
+//! On a meta level this implies, the runtime calls the functions provided by the generated code.
 //!
 //! # Using a type in a runtime interface
 //!

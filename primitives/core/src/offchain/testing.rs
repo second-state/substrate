@@ -144,6 +144,12 @@ impl TestOffchainExt {
 	}
 }
 
+impl offchain::OffchainKVStorageAccess for TestOffchainExt {
+	fn local_ocw_storage_write_kv(&mut self, key: &[u8], value: &[u8]) {
+		todo!("TODO not sure how to do this just yet");
+	}
+}
+
 impl offchain::Externalities for TestOffchainExt {
 	fn is_validator(&self) -> bool {
 		true
