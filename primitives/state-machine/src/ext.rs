@@ -24,6 +24,7 @@ use crate::{
 
 use hash_db::Hasher;
 use sp_core::{
+	offchain::storage::InMemOffchainStorage,
 	storage::{ChildStorageKey, well_known_keys::is_child_storage_key, ChildInfo},
 	traits::Externalities, hexdisplay::HexDisplay,
 };
@@ -74,6 +75,8 @@ pub struct Ext<'a, H, N, B>
 {
 	/// The overlayed changes to write to.
 	overlay: &'a mut OverlayedChanges,
+	/// The overlayed changes destined for the offchain worker database.
+	offchain_overlay: &'a mut InMemOffchainStorage,
 	/// The storage backend to read from.
 	backend: &'a B,
 	/// The cache for the storage transactions.
@@ -99,6 +102,7 @@ where
 	/// Create a new `Ext` from overlayed changes and read-only backend
 	pub fn new(
 		overlay: &'a mut OverlayedChanges,
+		offchain_overlay: &'a mut InMemOffchainStorage,
 		storage_transaction_cache: &'a mut StorageTransactionCache<B::Transaction, H, N>,
 		backend: &'a B,
 		changes_trie_state: Option<ChangesTrieState<'a, H, N>>,
@@ -106,6 +110,7 @@ where
 	) -> Self {
 		Ext {
 			overlay,
+			offchain_overlay,
 			backend,
 			changes_trie_state,
 			storage_transaction_cache,

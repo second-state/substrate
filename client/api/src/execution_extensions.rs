@@ -99,11 +99,14 @@ impl<Block: traits::Block> Default for ExecutionExtensions<Block> {
 	}
 }
 
+pub type X = u8;
+
 impl<Block: traits::Block> ExecutionExtensions<Block> {
 	/// Create new `ExecutionExtensions` given a `keystore` and `ExecutionStrategies`.
 	pub fn new(
 		strategies: ExecutionStrategies,
 		keystore: Option<BareCryptoStorePtr>,
+		configuration: X,
 	) -> Self {
 		let transaction_pool = RwLock::new(None);
 		let extensions_factory = Box::new(());
@@ -183,7 +186,7 @@ impl<Block: traits::Block> ExecutionExtensions<Block> {
 		extensions.register(
 			OffchainIndexExt::new(
 				offchain::LimitedExternalities::new(capabilities, Box::new(
-					OffchainKVStorageAccessX(0u8) // TODO what kind of self to we need here?
+					OffchainKVStorageAccessX(true) // TODO what kind of self to we need here?
 				))
 			)
 		);
@@ -214,12 +217,16 @@ impl<Block: traits::Block> offchain::TransactionPool for TransactionPoolAdapter<
 
 
 
-struct OffchainKVStorageAccessX(u8);
+struct OffchainKVStorageAccessX(bool);
 
 
 impl offchain::OffchainKVStorageAccess for  OffchainKVStorageAccessX {
 	fn local_ocw_storage_write_kv(&mut self, key: &[u8], value: &[u8]) {
-		todo!("TO BE DISCUSSED! HOW TO ACHIEVE THIS")
+		if self.0 {
+			todo!("TO BE DISCUSSED! HOW TO ACHIEVE THIS");
+		} else {
+			//prinln!("NOOOOOPE");
+		}
 	}
 }
 

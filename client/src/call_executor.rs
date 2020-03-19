@@ -25,7 +25,7 @@ use sp_state_machine::{
 };
 use sc_executor::{RuntimeVersion, RuntimeInfo, NativeVersion};
 use sp_externalities::Extensions;
-use sp_core::{NativeOrEncoded, NeverNativeValue, traits::CodeExecutor};
+use sp_core::{NativeOrEncoded, NeverNativeValue, traits::CodeExecutor, offchain::storage::InMemOffchainStorage};
 use sp_api::{ProofRecorder, InitializeBlock, StorageTransactionCache};
 use sc_client_api::{backend, call_executor::CallExecutor, CloneableSpawn};
 
@@ -81,6 +81,7 @@ where
 		extensions: Option<Extensions>,
 	) -> sp_blockchain::Result<Vec<u8>> {
 		let mut changes = OverlayedChanges::default();
+		let mut offchain_changes = Default::default();
 		let changes_trie = backend::changes_tries_state_at_block(
 			id, self.backend.changes_trie_storage()
 		)?;
@@ -90,6 +91,7 @@ where
 			&state,
 			changes_trie,
 			&mut changes,
+			&mut offchain_changes,
 			&self.executor,
 			method,
 			call_data,
@@ -120,6 +122,7 @@ where
 		method: &str,
 		call_data: &[u8],
 		changes: &RefCell<OverlayedChanges>,
+		offchain_changes: &RefCell<InMemOffchainStorage>,
 		storage_transaction_cache: Option<&RefCell<
 			StorageTransactionCache<Block, B::State>
 		>>,
@@ -164,6 +167,7 @@ where
 					&backend,
 					changes_trie_state,
 					&mut *changes.borrow_mut(),
+					&mut *offchain_changes.borrow_mut(),
 					&self.executor,
 					method,
 					call_data,
