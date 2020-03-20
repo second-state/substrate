@@ -185,6 +185,7 @@ where
 					&state,
 					changes_trie_state,
 					&mut *changes.borrow_mut(),
+					&mut *offchain_changes.borrow_mut(),
 					&self.executor,
 					method,
 					call_data,
@@ -200,6 +201,7 @@ where
 
 	fn runtime_version(&self, id: &BlockId<Block>) -> sp_blockchain::Result<RuntimeVersion> {
 		let mut overlay = OverlayedChanges::default();
+		let mut offchain_overlay = InMemOffchainStorage::default();
 		let changes_trie_state = backend::changes_tries_state_at_block(
 			id,
 			self.backend.changes_trie_storage(),
@@ -208,6 +210,7 @@ where
 		let mut cache = StorageTransactionCache::<Block, B::State>::default();
 		let mut ext = Ext::new(
 			&mut overlay,
+			&mut offchain_overlay,
 			&mut cache,
 			&state,
 			changes_trie_state,

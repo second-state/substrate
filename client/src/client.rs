@@ -169,7 +169,8 @@ pub fn new_with_backend<B, E, Block, S, RA>(
 		B: backend::LocalBackend<Block> + 'static,
 {
 	let call_executor = LocalCallExecutor::new(backend.clone(), executor, spawn_handle);
-	let extensions = ExecutionExtensions::new(Default::default(), keystore);
+	let config = Default::default();
+	let extensions = ExecutionExtensions::new(Default::default(), keystore, config);
 	Client::new(
 		backend,
 		call_executor,
@@ -1588,6 +1589,7 @@ impl<B, E, Block, RA> CallApiAt<Block> for Client<B, E, Block, RA> where
 			params.function,
 			&params.arguments,
 			params.overlayed_changes,
+			params.offchain_changes,
 			Some(params.storage_transaction_cache),
 			params.initialize_block,
 			manager,

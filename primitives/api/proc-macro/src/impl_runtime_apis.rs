@@ -250,6 +250,7 @@ fn generate_runtime_api_base_structures() -> Result<TokenStream> {
 			commit_on_success: std::cell::RefCell<bool>,
 			initialized_block: std::cell::RefCell<Option<#crate_::BlockId<Block>>>,
 			changes: std::cell::RefCell<#crate_::OverlayedChanges>,
+			offchain_changes: std::cell::RefCell<#crate_::InMemOffchainStorage>,
 			storage_transaction_cache: std::cell::RefCell<
 				#crate_::StorageTransactionCache<Block, C::StateBackend>
 			>,

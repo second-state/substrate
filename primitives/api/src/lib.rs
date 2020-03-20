@@ -58,7 +58,7 @@ pub use sp_runtime::{
 	generic::BlockId, transaction_validity::TransactionValidity,
 };
 #[doc(hidden)]
-pub use sp_core::{offchain, ExecutionContext};
+pub use sp_core::{offchain::{self, storage::InMemOffchainStorage}, ExecutionContext};
 #[doc(hidden)]
 pub use sp_version::{ApiId, RuntimeVersion, ApisVec, create_apis_vec};
 #[doc(hidden)]
@@ -371,6 +371,8 @@ pub struct CallApiAtParams<'a, Block: BlockT, C, NC, Backend: StateBackend<HashF
 	pub arguments: Vec<u8>,
 	/// The overlayed changes that are on top of the state.
 	pub overlayed_changes: &'a RefCell<OverlayedChanges>,
+	pub offchain_changes: &'a RefCell<InMemOffchainStorage>,
+
 	/// The cache for storage transactions.
 	pub storage_transaction_cache: &'a RefCell<StorageTransactionCache<Block, Backend>>,
 	/// Determines if the function requires that `initialize_block` should be called before calling
