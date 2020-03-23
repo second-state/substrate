@@ -37,39 +37,44 @@ extern crate self as sp_api;
 
 #[doc(hidden)]
 #[cfg(feature = "std")]
-pub use sp_state_machine::{
-	OverlayedChanges, StorageProof, Backend as StateBackend, ChangesTrieState,
-};
-#[doc(hidden)]
-#[cfg(feature = "std")]
-pub use sp_core::NativeOrEncoded;
-#[doc(hidden)]
-#[cfg(feature = "std")]
 pub use hash_db::Hasher;
+#[doc(hidden)]
+#[cfg(feature = "std")]
+pub use sp_core::offchain::storage::InMemOffchainStorage;
 #[doc(hidden)]
 #[cfg(not(feature = "std"))]
 pub use sp_core::to_substrate_wasm_fn_return_value;
 #[doc(hidden)]
+#[cfg(feature = "std")]
+pub use sp_core::NativeOrEncoded;
+#[doc(hidden)]
+pub use sp_core::{offchain, ExecutionContext};
+#[doc(hidden)]
 pub use sp_runtime::{
-	traits::{
-		Block as BlockT, GetNodeBlockType, GetRuntimeBlockType, HashFor, NumberFor,
-		Header as HeaderT, Hash as HashT,
-	},
-	generic::BlockId, transaction_validity::TransactionValidity,
+    generic::BlockId,
+    traits::{
+        Block as BlockT, GetNodeBlockType, GetRuntimeBlockType, Hash as HashT, HashFor,
+        Header as HeaderT, NumberFor,
+    },
+    transaction_validity::TransactionValidity,
 };
 #[doc(hidden)]
-pub use sp_core::{offchain::{self, storage::InMemOffchainStorage}, ExecutionContext};
+#[cfg(feature = "std")]
+pub use sp_state_machine::{
+    Backend as StateBackend, ChangesTrieState, OverlayedChanges, StorageProof,
+};
+
 #[doc(hidden)]
-pub use sp_version::{ApiId, RuntimeVersion, ApisVec, create_apis_vec};
-#[doc(hidden)]
-pub use sp_std::{slice, mem};
+pub use codec::{Decode, Encode};
+use sp_core::OpaqueMetadata;
 #[cfg(feature = "std")]
 use sp_std::result;
 #[doc(hidden)]
-pub use codec::{Encode, Decode};
-use sp_core::OpaqueMetadata;
+pub use sp_std::{mem, slice};
+#[doc(hidden)]
+pub use sp_version::{create_apis_vec, ApiId, ApisVec, RuntimeVersion};
 #[cfg(feature = "std")]
-use std::{panic::UnwindSafe, cell::RefCell};
+use std::{cell::RefCell, panic::UnwindSafe};
 
 /// Declares given traits as runtime apis.
 ///
@@ -356,32 +361,33 @@ pub enum InitializeBlock<'a, Block: BlockT> {
 /// Parameters for [`CallApiAt::call_api_at`].
 #[cfg(feature = "std")]
 pub struct CallApiAtParams<'a, Block: BlockT, C, NC, Backend: StateBackend<HashFor<Block>>> {
-	/// A reference to something that implements the [`Core`] api.
-	pub core_api: &'a C,
-	/// The block id that determines the state that should be setup when calling the function.
-	pub at: &'a BlockId<Block>,
-	/// The name of the function that should be called.
-	pub function: &'static str,
-	/// An optional native call that calls the `function`. This is an optimization to call into a
-	/// native runtime without requiring to encode/decode the parameters. The native runtime can
-	/// still be called when this value is `None`, we then just fallback to encoding/decoding the
-	/// parameters.
-	pub native_call: Option<NC>,
-	/// The encoded arguments of the function.
-	pub arguments: Vec<u8>,
-	/// The overlayed changes that are on top of the state.
-	pub overlayed_changes: &'a RefCell<OverlayedChanges>,
-	pub offchain_changes: &'a RefCell<InMemOffchainStorage>,
+    /// A reference to something that implements the [`Core`] api.
+    pub core_api: &'a C,
+    /// The block id that determines the state that should be setup when calling the function.
+    pub at: &'a BlockId<Block>,
+    /// The name of the function that should be called.
+    pub function: &'static str,
+    /// An optional native call that calls the `function`. This is an optimization to call into a
+    /// native runtime without requiring to encode/decode the parameters. The native runtime can
+    /// still be called when this value is `None`, we then just fallback to encoding/decoding the
+    /// parameters.
+    pub native_call: Option<NC>,
+    /// The encoded arguments of the function.
+    pub arguments: Vec<u8>,
+    /// The overlayed changes that are on top of the state.
+    pub overlayed_changes: &'a RefCell<OverlayedChanges>,
+    /// The overlayed changes that are there on top of whatever.
+    pub offchain_changes: &'a RefCell<InMemOffchainStorage>,
 
-	/// The cache for storage transactions.
-	pub storage_transaction_cache: &'a RefCell<StorageTransactionCache<Block, Backend>>,
-	/// Determines if the function requires that `initialize_block` should be called before calling
-	/// the actual function.
-	pub initialize_block: InitializeBlock<'a, Block>,
-	/// The context this function is executed in.
-	pub context: ExecutionContext,
-	/// The optional proof recorder for recording storage accesses.
-	pub recorder: &'a Option<ProofRecorder<Block>>,
+    /// The cache for storage transactions.
+    pub storage_transaction_cache: &'a RefCell<StorageTransactionCache<Block, Backend>>,
+    /// Determines if the function requires that `initialize_block` should be called before calling
+    /// the actual function.
+    pub initialize_block: InitializeBlock<'a, Block>,
+    /// The context this function is executed in.
+    pub context: ExecutionContext,
+    /// The optional proof recorder for recording storage accesses.
+    pub recorder: &'a Option<ProofRecorder<Block>>,
 }
 
 /// Something that can call into the an api at a given block.

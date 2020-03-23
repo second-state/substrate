@@ -104,6 +104,7 @@ impl BenchmarkCmd {
 
 		let genesis_storage = spec.build_storage()?;
 		let mut changes = Default::default();
+		let mut offchain_changes = Default::default();
 		let state = BenchmarkingState::<BB>::new(genesis_storage)?;
 		let executor = NativeExecutor::<ExecDispatch>::new(
 			wasm_method,
@@ -118,6 +119,7 @@ impl BenchmarkCmd {
 			&state,
 			None,
 			&mut changes,
+			&mut offchain_changes,
 			&executor,
 			"Benchmark_dispatch_benchmark",
 			&(

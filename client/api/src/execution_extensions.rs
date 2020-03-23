@@ -74,6 +74,38 @@ impl ExtensionsFactory for () {
 	}
 }
 
+
+/// Configuration data for the the execution extension
+///
+/// Originating from the service.
+/// Design rationale: Do not leak sp_service into sp_client
+#[derive(Debug, Clone)]
+pub struct ExecutionExtensionsConfig {
+    /// If OCW are enabled.`
+    pub offchain_worker_enabled: bool,
+    /// allow writes from the runtime to the offchain worker database
+    pub offchain_worker_indexing_enabled: bool,
+}
+
+impl ExecutionExtensionsConfig {
+    /// TODO move this into sp_service and impl a From<>()
+    pub fn new(offchain_worker_enabled: bool, offchain_worker_indexing_enabled: bool) -> Self {
+        Self {
+            offchain_worker_enabled,
+            offchain_worker_indexing_enabled,
+        }
+    }
+}
+
+impl Default for ExecutionExtensionsConfig {
+	fn default() -> Self {
+		Self {
+			offchain_worker_enabled : false,
+			offchain_worker_indexing_enabled : false,
+		}
+	}
+}
+
 /// A producer of execution extensions for offchain calls.
 ///
 /// This crate aggregates extensions available for the offchain calls
@@ -86,31 +118,37 @@ pub struct ExecutionExtensions<Block: traits::Block> {
 	//        remove when fixed.
 	transaction_pool: RwLock<Option<Weak<dyn sp_transaction_pool::OffchainSubmitTransaction<Block>>>>,
 	extensions_factory: RwLock<Box<dyn ExtensionsFactory>>,
+	config : ExecutionExtensionsConfig,
 }
 
 impl<Block: traits::Block> Default for ExecutionExtensions<Block> {
-	fn default() -> Self {
+    fn default() -> Self {
 		Self {
-			strategies: Default::default(),
+			strategies: ExecutionStrategies::default(),
 			keystore: None,
 			transaction_pool: RwLock::new(None),
 			extensions_factory: RwLock::new(Box::new(())),
+			config : ExecutionExtensionsConfig::default(),
 		}
 	}
 }
 
-pub type X = u8;
-
 impl<Block: traits::Block> ExecutionExtensions<Block> {
-	/// Create new `ExecutionExtensions` given a `keystore` and `ExecutionStrategies`.
-	pub fn new(
-		strategies: ExecutionStrategies,
-		keystore: Option<BareCryptoStorePtr>,
-		configuration: X,
-	) -> Self {
-		let transaction_pool = RwLock::new(None);
-		let extensions_factory = Box::new(());
-		Self { strategies, keystore, extensions_factory: RwLock::new(extensions_factory), transaction_pool }
+    /// Create new `ExecutionExtensions` given a `keystore` and `ExecutionStrategies`.
+    pub fn new(
+        strategies: ExecutionStrategies,
+        keystore: Option<BareCryptoStorePtr>,
+        config: ExecutionExtensionsConfig
+    ) -> Self {
+        let transaction_pool = RwLock::new(None);
+        let extensions_factory = Box::new(());
+        Self {
+            strategies,
+            keystore,
+            extensions_factory: RwLock::new(extensions_factory),
+			transaction_pool,
+			config,
+        }
 	}
 
 	/// Get a reference to the execution strategies.
@@ -186,7 +224,7 @@ impl<Block: traits::Block> ExecutionExtensions<Block> {
 		extensions.register(
 			OffchainIndexExt::new(
 				offchain::LimitedExternalities::new(capabilities, Box::new(
-					OffchainKVStorageAccessX(true) // TODO what kind of self to we need here?
+					OffchainKVStorageAccessAdapter { enabled : self.config.offchain_worker_indexing_enabled }
 				))
 			)
 		);
@@ -217,17 +255,17 @@ impl<Block: traits::Block> offchain::TransactionPool for TransactionPoolAdapter<
 
 
 
-struct OffchainKVStorageAccessX(bool);
-
-
-impl offchain::OffchainKVStorageAccess for  OffchainKVStorageAccessX {
-	fn local_ocw_storage_write_kv(&mut self, key: &[u8], value: &[u8]) {
-		if self.0 {
-			todo!("TO BE DISCUSSED! HOW TO ACHIEVE THIS");
-		} else {
-			//prinln!("NOOOOOPE");
-		}
-	}
+struct OffchainKVStorageAccessAdapter {
+	pub(crate) enabled : bool
 }
 
 
+impl offchain::OffchainKVStorageAccess for OffchainKVStorageAccessAdapter {
+	fn local_ocw_storage_write_kv(&mut self, key: &[u8], value: &[u8]) {
+		if self.enabled {
+			todo!("TO BE DISCUSSED! HOW TO ACHIEVE THIS");
+		} else {
+			// nop
+		}
+	}
+}
