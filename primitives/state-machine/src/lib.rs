@@ -68,8 +68,8 @@ pub use overlayed_changes::{
 	StorageCollection, ChildStorageCollection,
 };
 pub use proving_backend::{
-	create_proof_check_backend, create_proof_check_backend_storage, merge_storage_proofs,
-	ProofRecorder, ProvingBackend, ProvingBackendRecorder, StorageProof,
+	create_proof_check_backend,
+	ProofRecorder, ProvingBackend, ProvingBackendRecorder,
 };
 pub use trie_backend_essence::{TrieBackendStorage, Storage};
 pub use trie_backend::TrieBackend;

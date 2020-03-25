@@ -39,6 +39,7 @@ use sp_runtime::{
 		DigestFor,
 	},
 };
+
 use sp_state_machine::{
 	DBValue, Backend as StateBackend, ChangesTrieAnchorBlockId,
 	prove_read, prove_child_read, ChangesTrieRootsStorage, ChangesTrieStorage,
@@ -71,9 +72,10 @@ pub use sc_client_api::{
 		LockImportRun,
 	},
 	client::{
+		BlockBackend,
 		ImportNotifications, FinalityNotification, FinalityNotifications, AllBlocksNotifications, BlockImportNotification,
 		AllBlocksNotification,
-		ClientInfo, BlockchainEvents, BlockBody, ProvideUncles, BadBlocks, ForkBlocks,
+		ClientInfo, BlockchainEvents, ProvideUncles, BadBlocks, ForkBlocks,
 		BlockOf,
 	},
 	execution_extensions::{ExecutionExtensions, ExecutionStrategies},
@@ -693,7 +695,17 @@ impl<B, E, Block, RA> Client<B, E, Block, RA> where
 
 				operation.op.update_cache(new_cache);
 
-				let (main_sc, child_sc, tx, _, changes_trie_tx) = storage_changes.into_inner();
+				let (main_sc, 
+					child_sc, 
+					offchain_sc,
+					tx, _, 
+					changes_trie_tx) = storage_changes.into_inner();
+
+
+				// TODO FIXME how to deal with this?
+				let _ = offchain_sc;
+				// TODO apply offchain changes HERE
+
 
 				operation.op.update_db_storage(tx)?;
 				operation.op.update_storage(main_sc.clone(), child_sc.clone())?;
@@ -758,8 +770,6 @@ impl<B, E, Block, RA> Client<B, E, Block, RA> where
 			storage_changes,
 			retracted,
 		};
-
-		// TODO apply offchain changes HERE
 
 		self.notify_any_block_imported(
 			&import_summary
