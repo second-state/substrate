@@ -221,13 +221,13 @@ impl<Block: traits::Block> ExecutionExtensions<Block> {
 			);
 		}
 
-		extensions.register(
-			OffchainIndexExt::new(
-				offchain::LimitedExternalities::new(capabilities, Box::new(
-					OffchainKVStorageAccessAdapter { enabled : self.config.offchain_worker_indexing_enabled }
-				))
-			)
-		);
+		// extensions.register(
+		// 	OffchainIndexExt::new(
+		// 		offchain::LimitedExternalities::new(capabilities, Box::new(
+		// 			OffchainKVStorageAccessAdapter { enabled : self.config.offchain_worker_indexing_enabled }
+		// 		))
+		// 	)
+		// );
 
 		(manager, extensions)
 	}
@@ -255,17 +255,18 @@ impl<Block: traits::Block> offchain::TransactionPool for TransactionPoolAdapter<
 
 
 
-struct OffchainKVStorageAccessAdapter {
-	pub(crate) enabled : bool
-}
+// struct OffchainKVStorageAccessAdapter {
+// 	pub(crate) enabled : bool,
+
+// }
 
 
-impl offchain::OffchainKVStorageAccess for OffchainKVStorageAccessAdapter {
-	fn local_ocw_storage_write_kv(&mut self, key: &[u8], value: &[u8]) {
-		if self.enabled {
-			todo!("TO BE DISCUSSED! HOW TO ACHIEVE THIS");
-		} else {
-			// nop
-		}
-	}
-}
+// impl offchain::OffchainKVStorageAccess for OffchainKVStorageAccessAdapter {
+// 	fn local_ocw_storage_write_kv(&mut self, key: &[u8], value: &[u8]) {
+// 		if self.enabled {
+// 			todo!("TO BE DISCUSSED! HOW TO ACHIEVE THIS");
+// 		} else {
+// 			// nop
+// 		}
+// 	}
+// }

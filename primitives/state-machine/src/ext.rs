@@ -23,12 +23,14 @@ use crate::{
 };
 
 use hash_db::Hasher;
+use sp_core::offchain::OffchainStorage;
 use sp_core::{
 	offchain::storage::InMemOffchainStorage,
 	storage::{ChildStorageKey, well_known_keys::is_child_storage_key, ChildInfo},
 	traits::Externalities, hexdisplay::HexDisplay,
 };
 use sp_trie::{trie_types::Layout, default_child_trie_root};
+
 use sp_externalities::Extensions;
 use codec::{Decode, Encode};
 
@@ -108,7 +110,7 @@ where
 		changes_trie_state: Option<ChangesTrieState<'a, H, N>>,
 		extensions: Option<&'a mut Extensions>,
 	) -> Self {
-		Ext {
+		Self {
 			overlay,
 			offchain_overlay,
 			backend,
@@ -150,6 +152,7 @@ where
 	}
 }
 
+
 impl<'a, H, B, N> Externalities for Ext<'a, H, N, B>
 where
 	H: Hasher,
@@ -157,6 +160,13 @@ where
 	B: 'a + Backend<H>,
 	N: crate::changes_trie::BlockNumber,
 {
+
+	fn local_ocw_storage_write_kv(&mut self, key: &[u8], value: &[u8]) {
+		// TODO make conditional on the config
+		// TODO what should be the prefix
+		self.offchain_overlay.set(b"ocw", key, value);
+	}
+
 	fn storage(&self, key: &[u8]) -> Option<StorageValue> {
 		let _guard = sp_panic_handler::AbortGuard::force_abort();
 		let result = self.overlay.storage(key).map(|x| x.map(|x| x.to_vec())).unwrap_or_else(||

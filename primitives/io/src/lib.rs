@@ -35,7 +35,7 @@ use sp_std::ops::Deref;
 use sp_core::{
 	crypto::Pair,
 	traits::{KeystoreExt, CallInWasmExt},
-	offchain::{OffchainExt, OffchainIndexExt, TransactionPoolExt},
+	offchain::{OffchainExt, TransactionPoolExt},
 	hexdisplay::HexDisplay,
 	storage::{ChildStorageKey, ChildInfo},
 };
@@ -559,9 +559,7 @@ pub trait Hashing {
 pub trait OffchainIndex {
 	/// Write a key value pair to the offchain worker database in a buffered fashion.
 	fn write_kv(&mut self, key : &[u8], value : &[u8]) {
-		self.extension::<OffchainIndexExt>()
-			.expect("must have offchain extension index")
-			.local_ocw_storage_write_kv(key,value)
+		self.local_ocw_storage_write_kv(key,value)
 	}
 }
 

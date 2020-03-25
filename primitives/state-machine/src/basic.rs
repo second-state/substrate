@@ -111,6 +111,10 @@ impl From<BTreeMap<StorageKey, StorageValue>> for BasicExternalities {
 }
 
 impl Externalities for BasicExternalities {
+	fn local_ocw_storage_write_kv(&mut self, key: &[u8], value: &[u8]) {
+		todo!("TODO no idea if this can be left empty")
+	}
+
 	fn storage(&self, key: &[u8]) -> Option<StorageValue> {
 		self.inner.top.get(key).cloned()
 	}
