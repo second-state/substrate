@@ -65,13 +65,11 @@ pub struct OffchainWorkerParams {
 
 impl OffchainWorkerParams {
 	/// Load spec to `Configuration` from `OffchainWorkerParams` and spec factory.
-	pub fn update_config<'a, G, E>(
+	pub fn update_config<'a>(
 		&self,
-		mut config: &'a mut Configuration<G, E>,
+		mut config: &'a mut Configuration,
         role: sc_service::Roles,
-	) -> error::Result<()> where
-		G: RuntimeGenesis,
-		E: ChainSpecExtension,
+	) -> error::Result<()>
 	{
         let enabled = match (&self.enabled, role) {
 			(OffchainWorkerEnabled::WhenValidating, sc_service::Roles::AUTHORITY) => true,

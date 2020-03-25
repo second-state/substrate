@@ -759,7 +759,7 @@ impl<B, E, Block, RA> Client<B, E, Block, RA> where
 			retracted,
 		};
 
-		/// TODO apply offchain changes HERE
+		// TODO apply offchain changes HERE
 
 		self.notify_any_block_imported(
 			&import_summary
