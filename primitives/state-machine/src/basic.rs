@@ -111,8 +111,9 @@ impl From<BTreeMap<StorageKey, StorageValue>> for BasicExternalities {
 }
 
 impl Externalities for BasicExternalities {
-	fn local_ocw_storage_write_kv(&mut self, key: &[u8], value: &[u8]) {
-		todo!("TODO no idea if this can be left empty")
+	fn local_ocw_storage_write_kv(&mut self, _key: &[u8], _value: &[u8]) {
+		// FIXME TODO should this have an implementation?
+		warn!("basic externalities does not support local_ocw_storage_write_kv")
 	}
 
 	fn storage(&self, key: &[u8]) -> Option<StorageValue> {

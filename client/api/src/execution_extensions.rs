@@ -24,7 +24,7 @@ use std::sync::{Weak, Arc};
 use codec::Decode;
 use sp_core::{
 	ExecutionContext,
-	offchain::{self, OffchainExt, OffchainIndexExt, TransactionPoolExt},
+	offchain::{self, OffchainExt, TransactionPoolExt},
 	traits::{BareCryptoStorePtr, KeystoreExt},
 };
 use sp_runtime::{

@@ -29,6 +29,7 @@ use hash_db::Prefix;
 use sp_core::{
 	ChangesTrieConfiguration, convert_hash, traits::CodeExecutor,
 	NativeOrEncoded, storage::{StorageKey, StorageData, well_known_keys, ChildInfo},
+	offchain::OffchainStorage,
 };
 use sc_telemetry::{telemetry, SUBSTRATE_INFO};
 use sp_runtime::{
@@ -701,10 +702,13 @@ impl<B, E, Block, RA> Client<B, E, Block, RA> where
 					tx, _, 
 					changes_trie_tx) = storage_changes.into_inner();
 
-
-				// TODO FIXME how to deal with this?
-				let _ = offchain_sc;
-				// TODO apply offchain changes HERE
+				if let Some(mut offchain_storage) = self.backend.offchain_storage() {
+					offchain_sc.iter().for_each(|(k,v)| {
+						// TODO FIXME what's the prefix here?
+						offchain_storage.set(b"block_import_info", k,v)
+					});
+					
+				}
 
 
 				operation.op.update_db_storage(tx)?;

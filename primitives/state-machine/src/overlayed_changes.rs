@@ -740,9 +740,11 @@ mod tests {
 			..Default::default()
 		};
 
+		let mut offchain_overlay = Default::default();
 		let mut cache = StorageTransactionCache::default();
 		let mut ext = Ext::new(
 			&mut overlay,
+			&mut offchain_overlay,
 			&mut cache,
 			&backend,
 			crate::changes_trie::disabled_state::<_, u64>(),
