@@ -353,9 +353,9 @@ impl From<DispatchError> for DispatchOutcome {
 	}
 }
 
-/// Result of a module function call; either nothing (functions are only called for "side effects")
-/// or an error message.
-pub type DispatchResult = sp_std::result::Result<(), DispatchError>;
+/// Return type of a `Dispatchable` which contains the `DispatchResult` and additional information
+/// about the `Dispatchable` that is only known post dispatch.
+pub type DispatchResult<T> = sp_std::result::Result<T, DispatchErrorWithInfo<T>>;
 
 /// Reason why a dispatch call failed
 #[derive(Eq, PartialEq, Clone, Copy, Encode, Decode, RuntimeDebug)]
@@ -379,6 +379,19 @@ pub enum DispatchError {
 	},
 }
 
+/// The bounds that apply to the additional information of an error
+pub trait InfoBound: Eq + PartialEq + Clone + Copy + Encode + Decode {}
+
+/// Result of a `Dispatchable` which contains the `DispatchResult` and additional information
+/// about the `Dispatchable` that is only known post dispatch.
+#[derive(Eq, PartialEq, Clone, Copy, Encode, Decode, RuntimeDebug)]
+pub struct DispatchErrorWithInfo<Info: InfoBound> {
+	/// Addditional information about the `Dispatchable` which is only known post dispatch.
+	pub post_info: Info,
+	/// The actual `DispatchResult` indicating whether the dispatch was succesfull.
+	pub error: DispatchError,
+}
+
 impl DispatchError {
 	/// Return the same error but without the attached message.
 	pub fn stripped(self) -> Self {
@@ -390,9 +403,34 @@ impl DispatchError {
 	}
 }
 
+impl<T: InfoBound + Default> From<DispatchError> for DispatchErrorWithInfo<T> {
+	fn from(error: DispatchError) -> Self {
+		Self {
+			post_info: Default::default(),
+			error,
+		}
+	}
+}
+
+impl<T: InfoBound> From<DispatchErrorWithInfo<T>> for DispatchError {
+	fn from(error: DispatchErrorWithInfo<T>) -> Self {
+		error.error
+	}
+}
+
 impl From<crate::traits::LookupError> for DispatchError {
 	fn from(_: crate::traits::LookupError) -> Self {
 		Self::CannotLookup
+	}
+}
+
+impl<T: InfoBound + Default> From<crate::traits::LookupError> for DispatchErrorWithInfo<T>
+{
+	fn from(error: crate::traits::LookupError) -> Self {
+		Self {
+			post_info: Default::default(),
+			error: error.into(),
+		}
 	}
 }
 
@@ -402,9 +440,29 @@ impl From<crate::traits::BadOrigin> for DispatchError {
 	}
 }
 
+impl<T: InfoBound + Default> From<crate::traits::BadOrigin> for DispatchErrorWithInfo<T>
+{
+	fn from(error: crate::traits::BadOrigin) -> Self {
+		Self {
+			post_info: Default::default(),
+			error: error.into(),
+		}
+	}
+}
+
 impl From<&'static str> for DispatchError {
 	fn from(err: &'static str) -> DispatchError {
 		DispatchError::Other(err)
+	}
+}
+
+impl<T: InfoBound + Default> From<&'static str> for DispatchErrorWithInfo<T>
+{
+	fn from(error: &'static str) -> Self {
+		Self {
+			post_info: Default::default(),
+			error: error.into(),
+		}
 	}
 }
 
@@ -416,6 +474,12 @@ impl From<DispatchError> for &'static str {
 			DispatchError::BadOrigin => "Bad origin",
 			DispatchError::Module { message, .. } => message.unwrap_or("Unknown module error"),
 		}
+	}
+}
+
+impl<T: InfoBound> From<DispatchErrorWithInfo<T>> for &'static str {
+	fn from(err: DispatchErrorWithInfo<T>) -> &'static str {
+		err.error.into()
 	}
 }
 
@@ -434,6 +498,16 @@ impl traits::Printable for DispatchError {
 				}
 			}
 		}
+	}
+}
+
+impl<T> traits::Printable for DispatchErrorWithInfo<T>
+	where T: traits::Printable + InfoBound
+{
+	fn print(&self) {
+		self.error.print();
+		"PostInfo: ".print();
+		self.post_info.print();
 	}
 }
 

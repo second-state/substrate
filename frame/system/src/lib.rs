@@ -80,7 +80,7 @@
 //! 			let _sender = ensure_signed(origin)?;
 //! 			let _extrinsic_count = <system::Module<T>>::extrinsic_count();
 //! 			let _parent_hash = <system::Module<T>>::parent_hash();
-//! 			Ok(())
+//! 			Ok(0.into())
 //! 		}
 //! 	}
 //! }
@@ -978,7 +978,7 @@ impl<T: Trait> Module<T> {
 	pub fn note_applied_extrinsic(r: &DispatchOutcome, _encoded_len: u32, info: DispatchInfo) {
 		Self::deposit_event(
 			match r {
-				Ok(()) => RawEvent::ExtrinsicSuccess(info),
+				Ok(_) => RawEvent::ExtrinsicSuccess(info),
 				Err(err) => {
 					sp_runtime::print(err);
 					RawEvent::ExtrinsicFailed(err.clone(), info)
@@ -2030,7 +2030,10 @@ mod tests {
 					vec![1, 2, 3, 4],
 				);
 
-				assert_eq!(expected.map_err(DispatchError::from), res);
+				assert_eq!(
+					expected.map_err(DispatchError::from),
+					res.map(|_| ()).map_err(DispatchError::from)
+				);
 			});
 		}
 	}

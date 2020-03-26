@@ -161,7 +161,7 @@
 //! 		pub fn reward_myself(origin) -> dispatch::DispatchResult {
 //! 			let reported = ensure_signed(origin)?;
 //! 			<staking::Module<T>>::reward_by_ids(vec![(reported, 10)]);
-//! 			Ok(())
+//! 			Ok(0.into())
 //! 		}
 //! 	}
 //! }
@@ -1026,7 +1026,7 @@ decl_storage! {
 							T::Origin::from(Some(controller.clone()).into()),
 							votes.iter().map(|l| T::Lookup::unlookup(l.clone())).collect(),
 						)
-					}, _ => Ok(())
+					}, _ => Ok(0.into())
 				};
 			}
 		});
@@ -1968,7 +1968,7 @@ impl<T: Trait> Module<T> {
 			Self::deposit_event(RawEvent::Reward(who, imbalance.peek()));
 		}
 
-		Ok(())
+		Ok(0.into())
 	}
 
 	fn do_payout_validator(who: T::AccountId, era: EraIndex) -> DispatchResult {
@@ -2010,7 +2010,7 @@ impl<T: Trait> Module<T> {
 			Self::deposit_event(RawEvent::Reward(who, imbalance.peek()));
 		}
 
-		Ok(())
+		Ok(0.into())
 	}
 
 	/// Update the ledger for a controller. This will also update the stash lock. The lock will
@@ -2616,7 +2616,7 @@ impl<T: Trait> Module<T> {
 
 		system::Module::<T>::dec_ref(stash);
 
-		Ok(())
+		Ok(0.into())
 	}
 
 	/// Clear all era information for given era.

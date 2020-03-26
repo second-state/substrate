@@ -153,7 +153,6 @@
 use sp_std::prelude::*;
 use sp_runtime::{
 	traits::{Dispatchable, SaturatedConversion, CheckedAdd, CheckedMul},
-	DispatchResult
 };
 use codec::{Encode, Decode};
 
@@ -161,6 +160,7 @@ use frame_support::{
 	decl_module, decl_event, decl_storage, decl_error, ensure,
 	Parameter, RuntimeDebug, weights::{GetDispatchInfo, SimpleDispatchInfo, FunctionOf},
 	traits::{Currency, ReservableCurrency, Get, BalanceStatus},
+	dispatch::{DispatchResult, PostDispatchInfo},
 };
 use frame_system::{self as system, ensure_signed, ensure_root};
 
@@ -178,7 +178,7 @@ pub trait Trait: frame_system::Trait {
 	type Event: From<Event<Self>> + Into<<Self as frame_system::Trait>::Event>;
 
 	/// The overarching call type.
-	type Call: Parameter + Dispatchable<Origin=Self::Origin> + GetDispatchInfo;
+	type Call: Parameter + Dispatchable<Origin=Self::Origin, PostInfo = PostDispatchInfo> + GetDispatchInfo;
 
 	/// The currency mechanism.
 	type Currency: ReservableCurrency<Self::AccountId>;

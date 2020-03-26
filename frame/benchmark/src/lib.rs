@@ -74,7 +74,7 @@ decl_module! {
 		#[weight = frame_support::weights::SimpleDispatchInfo::default()]
 		pub fn do_nothing(_origin, input: u32) {
 			if input > 0 {
-				return Ok(());
+				return Ok(0.into());
 			}
 		}
 

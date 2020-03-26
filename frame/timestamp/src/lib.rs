@@ -73,7 +73,7 @@
 //! 		pub fn get_time(origin) -> dispatch::DispatchResult {
 //! 			let _sender = ensure_signed(origin)?;
 //! 			let _now = <timestamp::Module<T>>::get();
-//! 			Ok(())
+//! 			Ok(0.into())
 //! 		}
 //! 	}
 //! }

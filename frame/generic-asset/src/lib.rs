@@ -133,14 +133,14 @@
 //! 		ExistenceRequirement::KeepAlive,
 //! 	)?;
 //! 	// ...
-//! 	Ok(())
+//! 	Ok(0.into())
 //! }
 //!
 //! fn refund_fee<T: Trait>(transactor: &T::AccountId, amount: AssetOf<T>) -> dispatch::DispatchResult {
 //! 	// ...
 //! 	T::Currency::deposit_into_existing(transactor, amount)?;
 //! 	// ...
-//! 	Ok(())
+//! 	Ok(0.into())
 //! }
 //!
 //! # fn main() {}
@@ -154,7 +154,7 @@
 
 use codec::{Decode, Encode, HasCompact, Input, Output, Error as CodecError};
 
-use sp_runtime::{RuntimeDebug, DispatchResult, DispatchError};
+use sp_runtime::{RuntimeDebug, DispatchError};
 use sp_runtime::traits::{
 	CheckedAdd, CheckedSub, MaybeSerializeDeserialize, Member, One, Saturating, AtLeast32Bit,
 	Zero, Bounded,
@@ -168,7 +168,7 @@ use frame_support::{
 		Currency, ExistenceRequirement, Imbalance, LockIdentifier, LockableCurrency, ReservableCurrency,
 		SignedImbalance, WithdrawReason, WithdrawReasons, TryDrop, BalanceStatus,
 	},
-	Parameter, StorageMap,
+	Parameter, StorageMap, dispatch::DispatchResult,
 };
 use frame_system::{self as system, ensure_signed, ensure_root};
 
@@ -392,7 +392,7 @@ decl_module! {
 
 				Self::deposit_event(RawEvent::PermissionUpdated(asset_id, permissions.into()));
 
-				Ok(())
+				Ok(0.into())
 			} else {
 				Err(Error::<T>::NoUpdatePermission)?
 			}
@@ -405,7 +405,7 @@ decl_module! {
 			let who = ensure_signed(origin)?;
 			Self::mint_free(&asset_id, &who, &to, &amount)?;
 			Self::deposit_event(RawEvent::Minted(asset_id, to, amount));
-			Ok(())
+			Ok(0.into())
 		}
 
 		/// Burns an asset, decreases its total issuance.
@@ -415,7 +415,7 @@ decl_module! {
 			let who = ensure_signed(origin)?;
 			Self::burn_free(&asset_id, &who, &to, &amount)?;
 			Self::deposit_event(RawEvent::Burned(asset_id, to, amount));
-			Ok(())
+			Ok(0.into())
 		}
 
 		/// Can be used to create reserved tokens.
@@ -542,7 +542,7 @@ impl<T: Trait> Module<T> {
 
 			<TotalIssuance<T>>::insert(asset_id, new_total_issuance);
 			Self::set_free_balance(&asset_id, &to, value);
-			Ok(())
+			Ok(0.into())
 		} else {
 			Err(Error::<T>::NoMintPermission)?
 		}
@@ -566,7 +566,7 @@ impl<T: Trait> Module<T> {
 
 			<TotalIssuance<T>>::insert(asset_id, new_total_issuance);
 			Self::set_free_balance(asset_id, to, value);
-			Ok(())
+			Ok(0.into())
 		} else {
 			Err(Error::<T>::NoBurnPermission)?
 		}
@@ -607,7 +607,7 @@ impl<T: Trait> Module<T> {
 
 		Self::deposit_event(RawEvent::Created(asset_id, account_id, options));
 
-		Ok(())
+		Ok(0.into())
 	}
 
 	/// Transfer some liquid free balance from one account to another.
@@ -628,7 +628,7 @@ impl<T: Trait> Module<T> {
 			<FreeBalance<T>>::mutate(asset_id, to, |balance| *balance += amount);
 		}
 
-		Ok(())
+		Ok(0.into())
 	}
 
 	/// Transfer some liquid free balance from one account to another.
@@ -645,7 +645,7 @@ impl<T: Trait> Module<T> {
 			Self::deposit_event(RawEvent::Transferred(*asset_id, from.clone(), to.clone(), amount));
 		}
 
-		Ok(())
+		Ok(0.into())
 	}
 
 	/// Move `amount` from free balance to reserved balance.
@@ -665,7 +665,7 @@ impl<T: Trait> Module<T> {
 		Self::set_reserved_balance(asset_id, who, new_reserve_balance);
 		let new_free_balance = original_free_balance - amount;
 		Self::set_free_balance(asset_id, who, new_free_balance);
-		Ok(())
+		Ok(0.into())
 	}
 
 	/// Moves up to `amount` from reserved balance to free balance. This function cannot fail.
@@ -804,17 +804,17 @@ impl<T: Trait> Module<T> {
 		new_balance: T::Balance,
 	) -> DispatchResult {
 		if asset_id != &Self::staking_asset_id() {
-			return Ok(());
+			return Ok(0.into());
 		}
 
 		let locks = Self::locks(who);
 		if locks.is_empty() {
-			return Ok(());
+			return Ok(0.into());
 		}
 		if Self::locks(who)
 			.into_iter().all(|l| new_balance >= l.amount || !l.reasons.intersects(reasons))
 		{
-			Ok(())
+			Ok(0.into())
 		} else {
 			Err(Error::<T>::LiquidityRestrictions)?
 		}

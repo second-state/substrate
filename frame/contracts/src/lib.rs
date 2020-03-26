@@ -558,7 +558,7 @@ decl_module! {
 			Self::deposit_event(RawEvent::ScheduleUpdated(schedule.version));
 			CurrentSchedule::put(schedule);
 
-			Ok(())
+			Ok(0.into())
 		}
 
 		/// Stores the given binary Wasm code into the chain's storage and returns its `codehash`.
@@ -581,7 +581,7 @@ decl_module! {
 
 			gas::refund_unused_gas::<T>(&origin, gas_meter, imbalance);
 
-			result.map(|_| ()).map_err(Into::into)
+			result.map(|_| 0.into()).map_err(Into::into)
 		}
 
 		/// Makes a call to an account, optionally transferring some balance.
@@ -603,7 +603,7 @@ decl_module! {
 			let dest = T::Lookup::lookup(dest)?;
 
 			Self::bare_call(origin, dest, value, gas_limit, data)
-				.map(|_| ())
+				.map(|_| 0.into())
 				.map_err(|e| e.reason.into())
 		}
 
@@ -631,7 +631,7 @@ decl_module! {
 				ctx.instantiate(endowment, gas_meter, &code_hash, data)
 					.map(|(_address, output)| output)
 			})
-			.map(|_| ())
+			.map(|_| 0.into())
 			.map_err(|e| e.reason.into())
 		}
 
@@ -876,7 +876,7 @@ impl<T: Trait> Module<T> {
 		T::Currency::make_free_balance_be(&origin, <BalanceOf<T>>::zero());
 		T::Currency::deposit_creating(&dest, origin_free_balance);
 
-		Ok(())
+		Ok(0.into())
 	}
 }
 

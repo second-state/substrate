@@ -86,7 +86,7 @@ decl_module! {
 
 			// Here we are raising the Something event
 			Self::deposit_event(RawEvent::SomethingStored(something, who));
-			Ok(())
+			Ok(0.into())
 		}
 
 		/// Another dummy entry point.
@@ -101,7 +101,7 @@ decl_module! {
 				Some(old) => {
 					let new = old.checked_add(1).ok_or(Error::<T>::StorageOverflow)?;
 					Something::put(new);
-					Ok(())
+					Ok(0.into())
 				},
 			}
 		}

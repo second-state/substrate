@@ -431,7 +431,7 @@ decl_module! {
 		// - MUST NOT PANIC: Under no circumstances (save, perhaps, storage getting into an
 		// irreparably damaged state) must this function panic.
 		// - NO SIDE-EFFECTS ON ERROR: This function must either complete totally (and return
-		// `Ok(())` or it must have no side-effects on storage and return `Err('Some reason')`.
+		// `Ok(0.into())` or it must have no side-effects on storage and return `Err('Some reason')`.
 		//
 		// The first is relatively easy to audit for - just ensure all panickers are removed from
 		// logic that executes in production (which you do anyway, right?!). To ensure the second
@@ -496,7 +496,7 @@ decl_module! {
 			Self::deposit_event(RawEvent::Dummy(increase_by));
 
 			// All good.
-			Ok(())
+			Ok(0.into())
 		}
 
 		/// A privileged call; in this case it resets our dummy value to something new.
@@ -507,7 +507,7 @@ decl_module! {
 		// assume it's a one-off operation and substantial processing/storage/memory can be used
 		// without worrying about gameability or attack scenarios.
 		// If you do not specify `Result` explicitly as return value, it will be added automatically
-		// for you and `Ok(())` will be returned.
+		// for you and `Ok(0.into())` will be returned.
 		#[weight = WeightForSetDummy::<T>(<BalanceOf<T>>::from(100u32))]
 		fn set_dummy(origin, #[compact] new_value: T::Balance) {
 			ensure_root(origin)?;
@@ -563,7 +563,7 @@ impl<T: Trait> Module<T> {
 		});
 		assert!(prev + increase_by == result);
 
-		Ok(())
+		Ok(0.into())
 	}
 }
 

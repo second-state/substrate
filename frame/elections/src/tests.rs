@@ -947,8 +947,8 @@ fn election_simple_tally_should_work() {
 
 		System::set_block_number(6);
 		assert!(Elections::presentation_active());
-		assert_eq!(Elections::present_winner(Origin::signed(4), 2, 20, 0), Ok(()));
-		assert_eq!(Elections::present_winner(Origin::signed(4), 5, 50, 0), Ok(()));
+		assert_eq!(Elections::present_winner(Origin::signed(4), 2, 20, 0), Ok(0.into()));
+		assert_eq!(Elections::present_winner(Origin::signed(4), 5, 50, 0), Ok(0.into()));
 		assert_eq!(Elections::leaderboard(), Some(vec![(0, 0), (0, 0), (20, 2), (50, 5)]));
 		assert_ok!(Elections::end_block(System::block_number()));
 
@@ -981,8 +981,8 @@ fn election_seats_should_be_released() {
 
 		System::set_block_number(6);
 		assert!(Elections::presentation_active());
-		assert_eq!(Elections::present_winner(Origin::signed(4), 2, 20, 0), Ok(()));
-		assert_eq!(Elections::present_winner(Origin::signed(4), 5, 50, 0), Ok(()));
+		assert_eq!(Elections::present_winner(Origin::signed(4), 2, 20, 0), Ok(0.into()));
+		assert_eq!(Elections::present_winner(Origin::signed(4), 5, 50, 0), Ok(0.into()));
 		assert_eq!(Elections::leaderboard(), Some(vec![(0, 0), (0, 0), (20, 2), (50, 5)]));
 		assert_ok!(Elections::end_block(System::block_number()));
 
@@ -1049,7 +1049,7 @@ fn election_double_presentations_should_be_punished() {
 fn election_presenting_for_double_election_should_not_work() {
 	ExtBuilder::default().build().execute_with(|| {
 		System::set_block_number(4);
-		assert_eq!(Elections::submit_candidacy(Origin::signed(2), 0), Ok(()));
+		assert_eq!(Elections::submit_candidacy(Origin::signed(2), 0), Ok(0.into()));
 		assert_ok!(Elections::set_approvals(Origin::signed(2), vec![true], 0, 0, 20));
 		assert_ok!(Elections::end_block(System::block_number()));
 
@@ -1060,7 +1060,7 @@ fn election_presenting_for_double_election_should_not_work() {
 		System::set_block_number(8);
 		// NOTE: This is now mandatory to disable the lock
 		assert_ok!(Elections::retract_voter(Origin::signed(2), 0));
-		assert_eq!(Elections::submit_candidacy(Origin::signed(2), 0), Ok(()));
+		assert_eq!(Elections::submit_candidacy(Origin::signed(2), 0), Ok(0.into()));
 		assert_ok!(Elections::set_approvals(Origin::signed(2), vec![true], 1, 0, 20));
 		assert_ok!(Elections::end_block(System::block_number()));
 
@@ -1359,10 +1359,10 @@ fn election_loser_candidates_bond_gets_slashed() {
 
 		System::set_block_number(6);
 		assert!(Elections::presentation_active());
-		assert_eq!(Elections::present_winner(Origin::signed(4), 4, 10, 0), Ok(()));
-		assert_eq!(Elections::present_winner(Origin::signed(3), 3, 10, 0), Ok(()));
-		assert_eq!(Elections::present_winner(Origin::signed(2), 2, 10, 0), Ok(()));
-		assert_eq!(Elections::present_winner(Origin::signed(1), 1, 50, 0), Ok(()));
+		assert_eq!(Elections::present_winner(Origin::signed(4), 4, 10, 0), Ok(0.into()));
+		assert_eq!(Elections::present_winner(Origin::signed(3), 3, 10, 0), Ok(0.into()));
+		assert_eq!(Elections::present_winner(Origin::signed(2), 2, 10, 0), Ok(0.into()));
+		assert_eq!(Elections::present_winner(Origin::signed(1), 1, 50, 0), Ok(0.into()));
 
 
 		// winner + carry
@@ -1401,9 +1401,9 @@ fn pot_accumulating_weight_and_decaying_should_work() {
 		System::set_block_number(6);
 		assert!(Elections::presentation_active());
 
-		assert_eq!(Elections::present_winner(Origin::signed(6), 6, 600, 0), Ok(()));
-		assert_eq!(Elections::present_winner(Origin::signed(5), 5, 500, 0), Ok(()));
-		assert_eq!(Elections::present_winner(Origin::signed(1), 1, 100, 0), Ok(()));
+		assert_eq!(Elections::present_winner(Origin::signed(6), 6, 600, 0), Ok(0.into()));
+		assert_eq!(Elections::present_winner(Origin::signed(5), 5, 500, 0), Ok(0.into()));
+		assert_eq!(Elections::present_winner(Origin::signed(1), 1, 100, 0), Ok(0.into()));
 		assert_eq!(Elections::leaderboard(), Some(vec![(0, 0), (100, 1), (500, 5), (600, 6)]));
 		assert_ok!(Elections::end_block(System::block_number()));
 
@@ -1437,9 +1437,9 @@ fn pot_accumulating_weight_and_decaying_should_work() {
 
 		System::set_block_number(14);
 		assert!(Elections::presentation_active());
-		assert_eq!(Elections::present_winner(Origin::signed(6), 6, 600, 1), Ok(()));
-		assert_eq!(Elections::present_winner(Origin::signed(5), 5, 500, 1), Ok(()));
-		assert_eq!(Elections::present_winner(Origin::signed(1), 1, 100 + Elections::get_offset(100, 1), 1), Ok(()));
+		assert_eq!(Elections::present_winner(Origin::signed(6), 6, 600, 1), Ok(0.into()));
+		assert_eq!(Elections::present_winner(Origin::signed(5), 5, 500, 1), Ok(0.into()));
+		assert_eq!(Elections::present_winner(Origin::signed(1), 1, 100 + Elections::get_offset(100, 1), 1), Ok(0.into()));
 		assert_eq!(Elections::leaderboard(), Some(vec![(0, 0), (100 + 96, 1), (500, 5), (600, 6)]));
 		assert_ok!(Elections::end_block(System::block_number()));
 
@@ -1462,9 +1462,9 @@ fn pot_accumulating_weight_and_decaying_should_work() {
 
 		System::set_block_number(22);
 		assert!(Elections::presentation_active());
-		assert_eq!(Elections::present_winner(Origin::signed(6), 6, 600, 2), Ok(()));
-		assert_eq!(Elections::present_winner(Origin::signed(5), 5, 500, 2), Ok(()));
-		assert_eq!(Elections::present_winner(Origin::signed(1), 1, 100 + Elections::get_offset(100, 2), 2), Ok(()));
+		assert_eq!(Elections::present_winner(Origin::signed(6), 6, 600, 2), Ok(0.into()));
+		assert_eq!(Elections::present_winner(Origin::signed(5), 5, 500, 2), Ok(0.into()));
+		assert_eq!(Elections::present_winner(Origin::signed(1), 1, 100 + Elections::get_offset(100, 2), 2), Ok(0.into()));
 		assert_eq!(Elections::leaderboard(), Some(vec![(0, 0), (100 + 96 + 93, 1), (500, 5), (600, 6)]));
 		assert_ok!(Elections::end_block(System::block_number()));
 
@@ -1488,9 +1488,9 @@ fn pot_accumulating_weight_and_decaying_should_work() {
 
 		System::set_block_number(30);
 		assert!(Elections::presentation_active());
-		assert_eq!(Elections::present_winner(Origin::signed(6), 6, 600, 3), Ok(()));
-		assert_eq!(Elections::present_winner(Origin::signed(5), 5, 500, 3), Ok(()));
-		assert_eq!(Elections::present_winner(Origin::signed(1), 1, 100 + Elections::get_offset(100, 3), 3), Ok(()));
+		assert_eq!(Elections::present_winner(Origin::signed(6), 6, 600, 3), Ok(0.into()));
+		assert_eq!(Elections::present_winner(Origin::signed(5), 5, 500, 3), Ok(0.into()));
+		assert_eq!(Elections::present_winner(Origin::signed(1), 1, 100 + Elections::get_offset(100, 3), 3), Ok(0.into()));
 		assert_eq!(Elections::leaderboard(), Some(vec![(0, 0), (100 + 96 + 93 + 90, 1), (500, 5), (600, 6)]));
 		assert_ok!(Elections::end_block(System::block_number()));
 
@@ -1522,10 +1522,10 @@ fn pot_winning_resets_accumulated_pot() {
 
 		System::set_block_number(6);
 		assert!(Elections::presentation_active());
-		assert_eq!(Elections::present_winner(Origin::signed(6), 6, 600, 0), Ok(()));
-		assert_eq!(Elections::present_winner(Origin::signed(4), 4, 400, 0), Ok(()));
-		assert_eq!(Elections::present_winner(Origin::signed(3), 3, 300, 0), Ok(()));
-		assert_eq!(Elections::present_winner(Origin::signed(2), 2, 300, 0), Ok(()));
+		assert_eq!(Elections::present_winner(Origin::signed(6), 6, 600, 0), Ok(0.into()));
+		assert_eq!(Elections::present_winner(Origin::signed(4), 4, 400, 0), Ok(0.into()));
+		assert_eq!(Elections::present_winner(Origin::signed(3), 3, 300, 0), Ok(0.into()));
+		assert_eq!(Elections::present_winner(Origin::signed(2), 2, 300, 0), Ok(0.into()));
 		assert_eq!(Elections::leaderboard(), Some(vec![(300, 2), (300, 3), (400, 4), (600, 6)]));
 		assert_ok!(Elections::end_block(System::block_number()));
 
@@ -1542,10 +1542,10 @@ fn pot_winning_resets_accumulated_pot() {
 
 		System::set_block_number(14);
 		assert!(Elections::presentation_active());
-		assert_eq!(Elections::present_winner(Origin::signed(6), 6, 600, 1), Ok(()));
-		assert_eq!(Elections::present_winner(Origin::signed(4), 4, 400, 1), Ok(()));
-		assert_eq!(Elections::present_winner(Origin::signed(3), 3, 300 + Elections::get_offset(300, 1), 1), Ok(()));
-		assert_eq!(Elections::present_winner(Origin::signed(2), 2, 300 + Elections::get_offset(300, 1), 1), Ok(()));
+		assert_eq!(Elections::present_winner(Origin::signed(6), 6, 600, 1), Ok(0.into()));
+		assert_eq!(Elections::present_winner(Origin::signed(4), 4, 400, 1), Ok(0.into()));
+		assert_eq!(Elections::present_winner(Origin::signed(3), 3, 300 + Elections::get_offset(300, 1), 1), Ok(0.into()));
+		assert_eq!(Elections::present_winner(Origin::signed(2), 2, 300 + Elections::get_offset(300, 1), 1), Ok(0.into()));
 		assert_eq!(Elections::leaderboard(), Some(vec![(400, 4), (588, 2), (588, 3), (600, 6)]));
 		assert_ok!(Elections::end_block(System::block_number()));
 
@@ -1558,8 +1558,8 @@ fn pot_winning_resets_accumulated_pot() {
 		// 2 will not get re-elected with 300 + 288, instead just 300.
 		// because one of 3's candidates (3) won in previous round
 		// 4 on the other hand will get extra weight since it was unlucky.
-		assert_eq!(Elections::present_winner(Origin::signed(3), 2, 300, 2), Ok(()));
-		assert_eq!(Elections::present_winner(Origin::signed(4), 4, 400 + Elections::get_offset(400, 1), 2), Ok(()));
+		assert_eq!(Elections::present_winner(Origin::signed(3), 2, 300, 2), Ok(0.into()));
+		assert_eq!(Elections::present_winner(Origin::signed(4), 4, 400 + Elections::get_offset(400, 1), 2), Ok(0.into()));
 		assert_ok!(Elections::end_block(System::block_number()));
 
 		assert_eq!(Elections::members(), vec![(4, 27), (2, 27)]);
@@ -1596,9 +1596,9 @@ fn pot_resubmitting_approvals_stores_pot() {
 			System::set_block_number(6);
 			assert!(Elections::presentation_active());
 
-			assert_eq!(Elections::present_winner(Origin::signed(6), 6, 600, 0), Ok(()));
-			assert_eq!(Elections::present_winner(Origin::signed(5), 5, 500, 0), Ok(()));
-			assert_eq!(Elections::present_winner(Origin::signed(1), 1, 100, 0), Ok(()));
+			assert_eq!(Elections::present_winner(Origin::signed(6), 6, 600, 0), Ok(0.into()));
+			assert_eq!(Elections::present_winner(Origin::signed(5), 5, 500, 0), Ok(0.into()));
+			assert_eq!(Elections::present_winner(Origin::signed(1), 1, 100, 0), Ok(0.into()));
 			assert_eq!(Elections::leaderboard(), Some(vec![(0, 0), (100, 1), (500, 5), (600, 6)]));
 			assert_ok!(Elections::end_block(System::block_number()));
 
@@ -1634,11 +1634,11 @@ fn pot_resubmitting_approvals_stores_pot() {
 
 			System::set_block_number(14);
 			assert!(Elections::presentation_active());
-			assert_eq!(Elections::present_winner(Origin::signed(6), 6, 600, 1), Ok(()));
-			assert_eq!(Elections::present_winner(Origin::signed(5), 5, 500, 1), Ok(()));
+			assert_eq!(Elections::present_winner(Origin::signed(6), 6, 600, 1), Ok(0.into()));
+			assert_eq!(Elections::present_winner(Origin::signed(5), 5, 500, 1), Ok(0.into()));
 			assert_eq!(
 				Elections::present_winner(Origin::signed(1), 1, 1000 + 96 /* pot */, 1),
-				Ok(()),
+				Ok(0.into()),
 			);
 			assert_eq!(Elections::leaderboard(), Some(vec![(0, 0), (500, 5), (600, 6), (1096, 1)]));
 			assert_ok!(Elections::end_block(System::block_number()));

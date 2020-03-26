@@ -168,10 +168,11 @@ use frame_support::{
 		WithdrawReason, WithdrawReasons, LockIdentifier, LockableCurrency, ExistenceRequirement,
 		Imbalance, SignedImbalance, ReservableCurrency, Get, ExistenceRequirement::KeepAlive,
 		ExistenceRequirement::AllowDeath, IsDeadAccount, BalanceStatus as Status,
-	}
+	},
+	dispatch::DispatchResult,
 };
 use sp_runtime::{
-	RuntimeDebug, DispatchResult, DispatchError,
+	RuntimeDebug, DispatchError,
 	traits::{
 		Zero, AtLeast32Bit, StaticLookup, Member, CheckedAdd, CheckedSub,
 		MaybeSerializeDeserialize, Saturating, Bounded,
@@ -932,10 +933,10 @@ impl<T: Trait<I>, I: Instance> Currency<T::AccountId> for Module<T, I> where
 		reasons: WithdrawReasons,
 		new_balance: T::Balance,
 	) -> DispatchResult {
-		if amount.is_zero() { return Ok(()) }
+		if amount.is_zero() { return Ok(0.into()) }
 		let min_balance = Self::account(who).frozen(reasons.into());
 		ensure!(new_balance >= min_balance, Error::<T, I>::LiquidityRestrictions);
-		Ok(())
+		Ok(0.into())
 	}
 
 	// Transfer some free balance from `transactor` to `dest`, respecting existence requirements.
@@ -946,7 +947,7 @@ impl<T: Trait<I>, I: Instance> Currency<T::AccountId> for Module<T, I> where
 		value: Self::Balance,
 		existence_requirement: ExistenceRequirement,
 	) -> DispatchResult {
-		if value.is_zero() || transactor == dest { return Ok(()) }
+		if value.is_zero() || transactor == dest { return Ok(0.into()) }
 
 		Self::try_mutate_account(dest, |to_account| -> DispatchResult {
 			Self::try_mutate_account(transactor, |from_account| -> DispatchResult {
@@ -971,14 +972,14 @@ impl<T: Trait<I>, I: Instance> Currency<T::AccountId> for Module<T, I> where
 				let allow_death = allow_death && system::Module::<T>::allow_death(transactor);
 				ensure!(allow_death || from_account.free >= ed, Error::<T, I>::KeepAlive);
 
-				Ok(())
+				Ok(0.into())
 			})
 		})?;
 
 		// Emit transfer event.
 		Self::deposit_event(RawEvent::Transfer(transactor.clone(), dest.clone(), value));
 
-		Ok(())
+		Ok(0.into())
 	}
 
 	/// Slash a target account `who`, returning the negative imbalance created and any left over
@@ -1134,7 +1135,7 @@ impl<T: Trait<I>, I: Instance> ReservableCurrency<T::AccountId> for Module<T, I>
 	///
 	/// Is a no-op if value to be reserved is zero.
 	fn reserve(who: &T::AccountId, value: Self::Balance) -> DispatchResult {
-		if value.is_zero() { return Ok(()) }
+		if value.is_zero() { return Ok(0.into()) }
 
 		Self::try_mutate_account(who, |account| -> DispatchResult {
 			account.free = account.free.checked_sub(&value).ok_or(Error::<T, I>::InsufficientBalance)?;

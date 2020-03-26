@@ -156,7 +156,7 @@ decl_module! {
 			let who = ensure_signed(origin)?;
 			// Add the price to the on-chain list.
 			Self::add_price(who, price);
-			Ok(())
+			Ok(0.into())
 		}
 
 		/// Submit new price to the list via unsigned transaction.
@@ -186,7 +186,7 @@ decl_module! {
 			// now increment the block number at which we expect next unsigned transaction.
 			let current_block = <system::Module<T>>::block_number();
 			<NextUnsignedAt<T>>::put(current_block + T::UnsignedInterval::get());
-			Ok(())
+			Ok(0.into())
 		}
 
 		/// Offchain Worker entry point.
@@ -351,7 +351,7 @@ impl<T: Trait> Module<T> {
 		let results = T::SubmitSignedTransaction::submit_signed(call);
 		for (acc, res) in &results {
 			match res {
-				Ok(()) => debug::info!("[{:?}] Submitted price of {} cents", acc, price),
+				Ok(_) => debug::info!("[{:?}] Submitted price of {} cents", acc, price),
 				Err(e) => debug::error!("[{:?}] Failed to submit transaction: {:?}", acc, e),
 			}
 		}

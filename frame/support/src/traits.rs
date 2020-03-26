@@ -23,10 +23,10 @@ use codec::{FullCodec, Codec, Encode, Decode};
 use sp_core::u32_trait::Value as U32;
 use sp_runtime::{
 	RuntimeDebug,
-	ConsensusEngineId, DispatchResult, DispatchError,
+	ConsensusEngineId, DispatchError,
 	traits::{MaybeSerializeDeserialize, AtLeast32Bit, Saturating, TrailingZeroInput, Bounded},
 };
-use crate::dispatch::Parameter;
+use crate::dispatch::{Parameter, DispatchResult};
 use crate::storage::StorageMap;
 use impl_trait_for_tuples::impl_for_tuples;
 

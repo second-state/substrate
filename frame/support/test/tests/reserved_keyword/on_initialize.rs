@@ -13,7 +13,7 @@ macro_rules! reserved {
 					use frame_support::dispatch;
 
 					pub fn ensure_root<R>(_: R) -> dispatch::DispatchResult {
-						Ok(())
+						Ok(0.into())
 					}
 				}
 

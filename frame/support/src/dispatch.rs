@@ -25,10 +25,12 @@ pub use frame_metadata::{
 };
 pub use crate::weights::{
 	SimpleDispatchInfo, GetDispatchInfo, DispatchInfo, WeighData, ClassifyDispatch,
-	TransactionPriority, Weight, PaysFee,
+	TransactionPriority, Weight, PaysFee, PostDispatchInfo,
 };
-pub use sp_runtime::{traits::Dispatchable, DispatchError, DispatchResult};
+pub use sp_runtime::{traits::Dispatchable, DispatchError};
 pub use crate::traits::{CallMetadata, GetCallMetadata, GetCallName};
+
+pub type DispatchResult = sp_runtime::DispatchResult<PostDispatchInfo>;
 
 /// A type that cannot be instantiated.
 pub enum Never {}
@@ -36,7 +38,7 @@ pub enum Never {}
 /// Serializable version of Dispatchable.
 /// This value can be used as a "function" in an extrinsic.
 pub trait Callable<T> {
-	type Call: Dispatchable + Codec + Clone + PartialEq + Eq;
+	type Call: Dispatchable<PostInfo = PostDispatchInfo> + Codec + Clone + PartialEq + Eq;
 }
 
 // dirty hack to work around serde_derive issue
@@ -67,7 +69,7 @@ impl<T> Parameter for T where T: Codec + EncodeLike + Clone + Eq + fmt::Debug {}
 /// 		#[weight = SimpleDispatchInfo::default()]
 /// 		fn my_function(origin, var: u64) -> dispatch::DispatchResult {
 ///				// Your implementation
-///				Ok(())
+///				Ok(0.into())
 /// 		}
 ///
 ///			// Public functions are both dispatchable and available to other
@@ -75,7 +77,7 @@ impl<T> Parameter for T where T: Codec + EncodeLike + Clone + Eq + fmt::Debug {}
 /// 		#[weight = SimpleDispatchInfo::default()]
 ///			pub fn my_public_function(origin) -> dispatch::DispatchResult {
 /// 			// Your implementation
-///				Ok(())
+///				Ok(0.into())
 /// 		}
 ///		}
 /// }
@@ -107,7 +109,7 @@ impl<T> Parameter for T where T: Codec + EncodeLike + Clone + Eq + fmt::Debug {}
 /// 		#[weight = SimpleDispatchInfo::default()]
 /// 		fn my_long_function(origin) -> dispatch::DispatchResult {
 ///				// Your implementation
-/// 			Ok(())
+/// 			Ok(0.into())
 /// 		}
 ///
 /// 		#[weight = SimpleDispatchInfo::default()]
@@ -135,7 +137,7 @@ impl<T> Parameter for T where T: Codec + EncodeLike + Clone + Eq + fmt::Debug {}
 ///			fn my_privileged_function(origin) -> dispatch::DispatchResult {
 /// 			ensure_root(origin)?;
 ///				// Your implementation
-/// 			Ok(())
+/// 			Ok(0.into())
 /// 		}
 ///		}
 /// }
@@ -1161,7 +1163,7 @@ macro_rules! decl_module {
 			}
 			{
 				{ $( $impl )* }
-				Ok(())
+				Ok(0.into())
 			}
 		}
 	};
@@ -1538,7 +1540,8 @@ macro_rules! decl_module {
 		{
 			type Trait = $trait_instance;
 			type Origin = $origin_type;
-			fn dispatch(self, _origin: Self::Origin) -> $crate::sp_runtime::DispatchResult {
+			type PostInfo = $crate::weights::PostDispatchInfo;
+			fn dispatch(self, _origin: Self::Origin) -> $crate::dispatch::DispatchResult {
 				match self {
 					$(
 						$call_type::$fn_name( $( $param_name ),* ) => {
@@ -1563,10 +1566,10 @@ macro_rules! decl_module {
 			where $( $other_where_bounds )*
 		{
 			#[doc(hidden)]
-			pub fn dispatch<D: $crate::dispatch::Dispatchable<Trait = $trait_instance>>(
+			pub fn dispatch<D: $crate::dispatch::Dispatchable<Trait = $trait_instance, PostInfo = $crate::weights::PostDispatchInfo>>(
 				d: D,
 				origin: D::Origin
-			) -> $crate::sp_runtime::DispatchResult {
+			) -> $crate::dispatch::DispatchResult {
 				d.dispatch(origin)
 			}
 		}
@@ -1664,10 +1667,11 @@ macro_rules! impl_outer_dispatch {
 		impl $crate::dispatch::Dispatchable for $call_type {
 			type Origin = $origin;
 			type Trait = $call_type;
+			type PostInfo = $crate::weights::PostDispatchInfo;
 			fn dispatch(
 				self,
 				origin: $origin,
-			) -> $crate::sp_runtime::DispatchResult {
+			) -> $crate::dispatch::DispatchResult {
 				$crate::impl_outer_dispatch! {
 					@DISPATCH_MATCH
 					self
@@ -2046,7 +2050,7 @@ mod tests {
 		}
 
 		pub fn ensure_root<R>(_: R) -> DispatchResult {
-			Ok(())
+			Ok(0.into())
 		}
 	}
 

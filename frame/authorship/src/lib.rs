@@ -268,7 +268,7 @@ impl<T: Trait> Module<T> {
 		}
 
 		<Self as Store>::Uncles::put(&uncles);
-		Ok(())
+		Ok(0.into())
 	}
 
 	fn verify_uncle<'a, I: IntoIterator<Item=&'a T::Hash>>(

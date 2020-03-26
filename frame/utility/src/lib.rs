@@ -67,10 +67,10 @@ use sp_core::TypeId;
 use sp_io::hashing::blake2_256;
 use frame_support::{decl_module, decl_event, decl_error, decl_storage, Parameter, ensure, RuntimeDebug};
 use frame_support::{traits::{Get, ReservableCurrency, Currency},
-	weights::{GetDispatchInfo, DispatchClass,FunctionOf},
+	weights::{GetDispatchInfo, DispatchClass, FunctionOf, PostDispatchInfo}, dispatch::DispatchResult,
 };
 use frame_system::{self as system, ensure_signed};
-use sp_runtime::{DispatchError, DispatchResult, traits::Dispatchable};
+use sp_runtime::{DispatchError, traits::Dispatchable};
 
 type BalanceOf<T> = <<T as Trait>::Currency as Currency<<T as frame_system::Trait>::AccountId>>::Balance;
 
@@ -80,7 +80,7 @@ pub trait Trait: frame_system::Trait {
 	type Event: From<Event<Self>> + Into<<Self as frame_system::Trait>::Event>;
 
 	/// The overarching call type.
-	type Call: Parameter + Dispatchable<Origin=Self::Origin> + GetDispatchInfo;
+	type Call: Parameter + Dispatchable<Origin=Self::Origin, PostInfo = PostDispatchInfo> + GetDispatchInfo;
 
 	/// The currency mechanism.
 	type Currency: ReservableCurrency<Self::AccountId>;
@@ -181,7 +181,7 @@ decl_event! {
 		MultisigApproval(AccountId, Timepoint<BlockNumber>, AccountId),
 		/// A multisig operation has been executed. First param is the account that is
 		/// approving, third is the multisig account.
-		MultisigExecuted(AccountId, Timepoint<BlockNumber>, AccountId, DispatchResult),
+		MultisigExecuted(AccountId, Timepoint<BlockNumber>, AccountId, Result<(), DispatchError>),
 		/// A multisig operation has been cancelled. First param is the account that is
 		/// cancelling, third is the multisig account.
 		MultisigCancelled(AccountId, Timepoint<BlockNumber>, AccountId),
@@ -243,8 +243,8 @@ decl_module! {
 			for (index, call) in calls.into_iter().enumerate() {
 				let result = call.dispatch(origin.clone());
 				if let Err(e) = result {
-					Self::deposit_event(Event::<T>::BatchInterrupted(index as u32, e));
-					return Ok(());
+					Self::deposit_event(Event::<T>::BatchInterrupted(index as u32, e.error));
+					return Ok(e.post_info);
 				}
 			}
 			Self::deposit_event(Event::<T>::BatchCompleted);
@@ -343,7 +343,7 @@ decl_module! {
 						m.approvals.insert(pos, who.clone());
 						<Multisigs<T>>::insert(&id, call_hash, m);
 						Self::deposit_event(RawEvent::MultisigApproval(who, timepoint, id));
-						return Ok(())
+						return Ok(0.into())
 					}
 				} else {
 					if (m.approvals.len() as u16) < threshold {
@@ -354,7 +354,10 @@ decl_module! {
 				let result = call.dispatch(frame_system::RawOrigin::Signed(id.clone()).into());
 				let _ = T::Currency::unreserve(&m.depositor, m.deposit);
 				<Multisigs<T>>::remove(&id, call_hash);
-				Self::deposit_event(RawEvent::MultisigExecuted(who, timepoint, id, result));
+				Self::deposit_event(RawEvent::MultisigExecuted(
+					who, timepoint, id,
+					result.map(|_| ()).map_err(Into::into))
+				);
 			} else {
 				ensure!(maybe_timepoint.is_none(), Error::<T>::UnexpectedTimepoint);
 				if threshold > 1 {
@@ -372,7 +375,7 @@ decl_module! {
 					return call.dispatch(frame_system::RawOrigin::Signed(id).into())
 				}
 			}
-			Ok(())
+			Ok(0.into())
 		}
 
 		/// Register approval for a dispatch to be made from a deterministic composite account if
@@ -457,7 +460,7 @@ decl_module! {
 					Err(Error::<T>::NoApprovalsNeeded)?
 				}
 			}
-			Ok(())
+			Ok(0.into())
 		}
 
 		/// Cancel a pre-existing, on-going multisig transaction. Any deposit reserved previously
@@ -513,7 +516,7 @@ decl_module! {
 			<Multisigs<T>>::remove(&id, call_hash);
 
 			Self::deposit_event(RawEvent::MultisigCancelled(who, timepoint, id));
-			Ok(())
+			Ok(0.into())
 		}
 	}
 }

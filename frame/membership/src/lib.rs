@@ -166,7 +166,7 @@ decl_module! {
 				.map(|_| ())
 				.or_else(ensure_root)?;
 
-			if remove == add { return Ok(()) }
+			if remove == add { return Ok(0.into()) }
 
 			let mut members = <Members<T, I>>::get();
 			let location = members.binary_search(&remove).ok().ok_or(Error::<T, I>::NotMember)?;

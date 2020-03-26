@@ -84,7 +84,7 @@
 
 use sp_std::prelude::*;
 use sp_runtime::{
-	print, DispatchResult, DispatchError, Perbill, traits::{Zero, StaticLookup, Convert},
+	print, DispatchError, Perbill, traits::{Zero, StaticLookup, Convert},
 };
 use frame_support::{
 	decl_storage, decl_event, ensure, decl_module, decl_error,
@@ -92,7 +92,8 @@ use frame_support::{
 	traits::{
 		Currency, Get, LockableCurrency, LockIdentifier, ReservableCurrency, WithdrawReasons,
 		ChangeMembers, OnUnbalanced, WithdrawReason, Contains, BalanceStatus
-	}
+	},
+	dispatch::DispatchResult,
 };
 use sp_phragmen::{build_support_map, ExtendedBalance};
 use frame_system::{self as system, ensure_signed, ensure_root};
@@ -404,7 +405,7 @@ decl_module! {
 				Self::deposit_event(RawEvent::MemberRenounced(who.clone()));
 
 				// safety guard to make sure we do only one arm. Better to read runners later.
-				return Ok(());
+				return Ok(0.into());
 			}
 
 			let mut runners_up_with_stake = Self::runners_up();
@@ -417,7 +418,7 @@ decl_module! {
 				// update storage.
 				<RunnersUp<T>>::put(runners_up_with_stake);
 				// safety guard to make sure we do only one arm. Better to read runners later.
-				return Ok(());
+				return Ok(0.into());
 			}
 
 			let mut candidates = Self::candidates();
@@ -428,7 +429,7 @@ decl_module! {
 				// update storage.
 				<Candidates<T>>::put(candidates);
 				// safety guard to make sure we do only one arm. Better to read runners later.
-				return Ok(());
+				return Ok(0.into());
 			}
 
 			Err(Error::<T>::InvalidOrigin)?
@@ -460,7 +461,9 @@ decl_module! {
 				if !had_replacement {
 					Self::do_phragmen();
 				}
-			})
+
+				frame_support::dispatch::PostDispatchInfo{ unused_weight: 0 }
+			}).map_err(Into::into)
 		}
 
 		/// What to do at the end of each block. Checks if an election needs to happen or not.
@@ -636,7 +639,7 @@ impl<T: Trait> Module<T> {
 				Self::do_phragmen();
 			}
 		}
-		Ok(())
+		Ok(0.into())
 	}
 
 	/// Run the phragmen election with all required side processes and state updates.

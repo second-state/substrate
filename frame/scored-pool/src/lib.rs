@@ -68,7 +68,7 @@
 //! 			let _ = <scored_pool::Module<T>>::submit_candidacy(
 //! 				T::Origin::from(Some(who.clone()).into())
 //! 			);
-//! 			Ok(())
+//! 			Ok(0.into())
 //! 		}
 //! 	}
 //! }

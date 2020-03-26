@@ -110,7 +110,7 @@
 //! 			<TotalSupply<T>>::insert(asset_id, TOKENS_FIXED_SUPPLY);
 //!
 //! 			Self::deposit_event(RawEvent::Issued(asset_id, sender, TOKENS_FIXED_SUPPLY));
-//! 			Ok(())
+//! 			Ok(0.into())
 //! 		}
 //! 	}
 //! }

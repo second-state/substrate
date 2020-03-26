@@ -506,7 +506,7 @@ decl_module! {
 
 			Self::do_set_keys(&who, keys)?;
 
-			Ok(())
+			Ok(0.into())
 		}
 
 		/// Removes any session key(s) of the function caller.
@@ -673,7 +673,7 @@ impl<T: Trait> Module<T> {
 			system::Module::<T>::inc_ref(&account);
 		}
 
-		Ok(())
+		Ok(0.into())
 	}
 
 	/// Perform the set_key operation, checking for duplicates. Does not set `Changed`.
@@ -720,7 +720,7 @@ impl<T: Trait> Module<T> {
 		}
 		system::Module::<T>::dec_ref(&account);
 
-		Ok(())
+		Ok(0.into())
 	}
 
 	fn load_keys(v: &T::ValidatorId) -> Option<T::Keys> {

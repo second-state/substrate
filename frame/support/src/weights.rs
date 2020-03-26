@@ -116,6 +116,30 @@ pub struct DispatchInfo {
 	pub pays_fee: bool,
 }
 
+/// Weight information that is only available post dispatch.
+#[derive(Clone, Copy, Eq, PartialEq, Default, RuntimeDebug, Encode, Decode)]
+pub struct PostDispatchInfo {
+	/// Amount of weight that was not consumed by a call.
+	pub unused_weight: Weight,
+}
+
+impl sp_runtime::InfoBound for PostDispatchInfo {}
+
+impl From<Weight> for PostDispatchInfo {
+	fn from(unused_weight: Weight) -> Self {
+		Self {
+			unused_weight,
+		}
+	}
+}
+
+impl sp_runtime::traits::Printable for PostDispatchInfo {
+	fn print(&self) {
+		"unused_weight=".print();
+		self.unused_weight.print();
+	}
+}
+
 /// A `Dispatchable` function (aka transaction) that can carry some static information along with
 /// it, using the `#[weight]` attribute.
 pub trait GetDispatchInfo {

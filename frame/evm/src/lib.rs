@@ -27,13 +27,12 @@ use sp_std::{vec::Vec, marker::PhantomData};
 use frame_support::{ensure, decl_module, decl_storage, decl_event, decl_error};
 use frame_support::weights::{Weight, DispatchClass, FunctionOf};
 use frame_support::traits::{Currency, WithdrawReason, ExistenceRequirement};
+use frame_support::dispatch::DispatchResult;
 use frame_system::{self as system, ensure_signed};
 use sp_runtime::ModuleId;
 use frame_support::weights::SimpleDispatchInfo;
 use sp_core::{U256, H256, H160, Hasher};
-use sp_runtime::{
-	DispatchResult, traits::{UniqueSaturatedInto, AccountIdConversion, SaturatedConversion},
-};
+use sp_runtime::traits::{UniqueSaturatedInto, AccountIdConversion, SaturatedConversion};
 use sha3::{Digest, Keccak256};
 use evm::{ExitReason, ExitSucceed, ExitError, Config};
 use evm::executor::StackExecutor;
@@ -254,7 +253,7 @@ decl_module! {
 					input,
 					gas_limit as usize,
 				)),
-			).map_err(Into::into)
+			).map_err(Into::into).map(|_| 0.into())
 		}
 
 		/// Issue an EVM create operation. This is similar to a contract creation transaction in
@@ -290,7 +289,7 @@ decl_module! {
 			)?;
 
 			Module::<T>::deposit_event(Event::Created(create_address));
-			Ok(())
+			Ok(0.into())
 		}
 
 		/// Issue an EVM create2 operation.
@@ -328,7 +327,7 @@ decl_module! {
 			)?;
 
 			Module::<T>::deposit_event(Event::Created(create_address));
-			Ok(())
+			Ok(0.into())
 		}
 	}
 }

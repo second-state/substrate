@@ -22,6 +22,7 @@ use codec::Encode;
 use frame_support::{
 	impl_outer_origin, impl_outer_dispatch, assert_noop, assert_ok, parameter_types,
 	ord_parameter_types, traits::Contains, weights::Weight,
+	dispatch::DispatchResult,
 };
 use sp_core::H256;
 use sp_runtime::{
@@ -213,7 +214,7 @@ fn propose_set_balance_and_note(who: u64, value: u64, delay: u64) -> DispatchRes
 
 fn next_block() {
 	System::set_block_number(System::block_number() + 1);
-	assert_eq!(Democracy::begin_block(System::block_number()), Ok(()));
+	assert_eq!(Democracy::begin_block(System::block_number()), Ok(0.into()));
 }
 
 fn fast_forward_to(n: u64) {

@@ -48,7 +48,7 @@ fn add_registrars<T: Trait>(r: u32) -> Result<(), &'static str> {
 	}
 
 	assert_eq!(Registrars::<T>::get().len(), r as usize);
-	Ok(())
+	Ok(0.into())
 }
 
 // Adds `s` sub-accounts to the identity of `who`. Each wil have 32 bytes of raw data added to it.

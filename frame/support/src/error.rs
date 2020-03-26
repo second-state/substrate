@@ -151,6 +151,17 @@ macro_rules! decl_error {
 			}
 		}
 
+		impl<$generic: $trait $(, $inst_generic: $instance)?> From<$error<$generic $(, $inst_generic)?>>
+			for $crate::sp_runtime::DispatchErrorWithInfo<$crate::weights::PostDispatchInfo>
+		{
+			fn from(err: $error<$generic $(, $inst_generic)?>) -> Self {
+				Self {
+					post_info: 0.into(),
+					error: err.into(),
+				}
+			}
+		}
+
 		impl<$generic: $trait $(, $inst_generic: $instance)?> $crate::error::ModuleErrorMetadata
 			for $error<$generic $(, $inst_generic)?>
 		{

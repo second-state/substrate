@@ -116,7 +116,7 @@ pub type UncheckedExtrinsic = generic::UncheckedExtrinsic<u32, Call, Signature, 
 fn check_module1_1_error_type() {
 	assert_eq!(
 		Module1_1::fail(system::Origin::<Runtime>::Root.into()),
-		Err(DispatchError::Module { index: 1, error: 0, message: Some("Something") }),
+		Err(DispatchError::Module { index: 1, error: 0, message: Some("Something") }.into()),
 	);
 }
 
@@ -124,7 +124,7 @@ fn check_module1_1_error_type() {
 fn check_module1_2_error_type() {
 	assert_eq!(
 		Module1_2::fail(system::Origin::<Runtime>::Root.into()),
-		Err(DispatchError::Module { index: 3, error: 0, message: Some("Something") }),
+		Err(DispatchError::Module { index: 3, error: 0, message: Some("Something") }.into()),
 	);
 }
 
@@ -132,6 +132,6 @@ fn check_module1_2_error_type() {
 fn check_module2_error_type() {
 	assert_eq!(
 		Module2::fail(system::Origin::<Runtime>::Root.into()),
-		Err(DispatchError::Module { index: 2, error: 0, message: Some("Something") }),
+		Err(DispatchError::Module { index: 2, error: 0, message: Some("Something") }.into()),
 	);
 }

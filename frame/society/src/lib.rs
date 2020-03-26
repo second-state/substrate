@@ -388,7 +388,7 @@ impl<AccountId: PartialEq, Balance> BidKind<AccountId, Balance> {
 	fn check_voucher(&self, v: &AccountId) -> DispatchResult {
 		if let BidKind::Vouch(ref a, _) = self {
 			if a == v {
-				Ok(())
+				Ok(0.into())
 			} else {
 				Err("incorrect identity")?
 			}
@@ -544,7 +544,7 @@ decl_module! {
 
 			Self::put_bid(bids, &who, value.clone(), BidKind::Deposit(deposit));
 			Self::deposit_event(RawEvent::Bid(who, value));
-			Ok(())
+			Ok(0.into())
 		}
 
 		/// A bidder can remove their bid for entry into society.
@@ -585,7 +585,7 @@ decl_module! {
 						}
 					}
 					Self::deposit_event(RawEvent::Unbid(who));
-					Ok(())
+					Ok(0.into())
 				} else {
 					Err(Error::<T, I>::BadPosition)?
 				}
@@ -657,7 +657,7 @@ decl_module! {
 			<Vouching<T, I>>::insert(&voucher, VouchingStatus::Vouching);
 			Self::put_bid(bids, &who, value.clone(), BidKind::Vouch(voucher.clone(), tip));
 			Self::deposit_event(RawEvent::Vouch(who, value, voucher));
-			Ok(())
+			Ok(0.into())
 		}
 
 		/// As a vouching member, unvouch a bid. This only works while vouched user is
@@ -689,7 +689,7 @@ decl_module! {
 					<Vouching<T, I>>::remove(&voucher);
 					let who = b.remove(pos).who;
 					Self::deposit_event(RawEvent::Unvouch(who));
-					Ok(())
+					Ok(0.into())
 				} else {
 					Err(Error::<T, I>::BadPosition)?
 				}
@@ -795,7 +795,7 @@ decl_module! {
 					} else {
 						<Payouts<T, I>>::insert(&who, payouts);
 					}
-					return Ok(())
+					return Ok(0.into())
 				}
 			}
 			Err(Error::<T, I>::NoPayout)?
@@ -1260,10 +1260,10 @@ impl<T: Trait<I>, I: Instance> Module<T, I> {
 				members.insert(i, who.clone());
 				T::MembershipChanged::change_members_sorted(&[who.clone()], &[], &members);
 				<Members<T, I>>::put(members);
-				Ok(())
+				Ok(0.into())
 			},
 			// User is already a member, do nothing.
-			Ok(_) => Ok(()),
+			Ok(_) => Ok(0.into()),
 		}
 	}
 
@@ -1282,7 +1282,7 @@ impl<T: Trait<I>, I: Instance> Module<T, I> {
 				members.remove(i);
 				T::MembershipChanged::change_members_sorted(&[], &[m.clone()], &members[..]);
 				<Members<T, I>>::put(members);
-				Ok(())
+				Ok(0.into())
 			}
 		}
 	}

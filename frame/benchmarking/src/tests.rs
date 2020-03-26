@@ -30,13 +30,13 @@ decl_module! {
 		#[weight = frame_support::weights::SimpleDispatchInfo::default()]
 		fn dummy(origin, _n: u32) -> DispatchResult {
 			let _sender = ensure_signed(origin)?;
-			Ok(())
+			Ok(0.into())
 		}
 
 		#[weight = frame_support::weights::SimpleDispatchInfo::default()]
 		fn other_dummy(origin, _n: u32) -> DispatchResult {
 			let _sender = ensure_none(origin)?;
-			Ok(())
+			Ok(0.into())
 		}
 	}
 }

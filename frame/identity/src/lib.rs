@@ -69,12 +69,12 @@ use sp_std::prelude::*;
 use sp_std::{fmt::Debug, ops::Add, iter::once};
 use enumflags2::BitFlags;
 use codec::{Encode, Decode};
-use sp_runtime::{DispatchResult, RuntimeDebug};
+use sp_runtime::RuntimeDebug;
 use sp_runtime::traits::{StaticLookup, EnsureOrigin, Zero, AppendZerosInput};
 use frame_support::{
 	decl_module, decl_event, decl_storage, ensure, decl_error,
 	traits::{Currency, ReservableCurrency, OnUnbalanced, Get, BalanceStatus},
-	weights::SimpleDispatchInfo,
+	weights::SimpleDispatchInfo, dispatch::DispatchResult,
 };
 use frame_system::{self as system, ensure_signed, ensure_root};
 
@@ -726,7 +726,7 @@ decl_module! {
 			<Registrars<T>>::mutate(|rs|
 				rs.get_mut(index as usize)
 					.and_then(|x| x.as_mut())
-					.and_then(|r| if r.account == who { r.fee = fee; Some(()) } else { None })
+					.and_then(|r| if r.account == who { r.fee = fee; Some(0.into()) } else { None })
 					.ok_or_else(|| Error::<T>::InvalidIndex.into())
 			)
 		}
@@ -753,7 +753,7 @@ decl_module! {
 			<Registrars<T>>::mutate(|rs|
 				rs.get_mut(index as usize)
 					.and_then(|x| x.as_mut())
-					.and_then(|r| if r.account == who { r.account = new; Some(()) } else { None })
+					.and_then(|r| if r.account == who { r.account = new; Some(0.into()) } else { None })
 					.ok_or_else(|| Error::<T>::InvalidIndex.into())
 			)
 		}
@@ -780,7 +780,7 @@ decl_module! {
 			<Registrars<T>>::mutate(|rs|
 				rs.get_mut(index as usize)
 					.and_then(|x| x.as_mut())
-					.and_then(|r| if r.account == who { r.fields = fields; Some(()) } else { None })
+					.and_then(|r| if r.account == who { r.fields = fields; Some(0.into()) } else { None })
 					.ok_or_else(|| Error::<T>::InvalidIndex.into())
 			)
 		}

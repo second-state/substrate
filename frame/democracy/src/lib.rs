@@ -165,7 +165,7 @@
 
 use sp_std::prelude::*;
 use sp_runtime::{
-	DispatchResult, DispatchError, traits::{Zero, EnsureOrigin, Hash, Dispatchable, Saturating},
+	DispatchError, traits::{Zero, EnsureOrigin, Hash, Dispatchable, Saturating},
 };
 use codec::{Ref, Decode};
 use frame_support::{
@@ -174,7 +174,8 @@ use frame_support::{
 	traits::{
 		Currency, ReservableCurrency, LockableCurrency, WithdrawReason, LockIdentifier, Get,
 		OnUnbalanced, BalanceStatus
-	}
+	},
+	dispatch::DispatchResult,
 };
 use frame_system::{self as system, ensure_signed, ensure_root};
 
@@ -1146,7 +1147,7 @@ decl_module! {
 			let who = ensure_signed(origin)?;
 			let scope = if target == who { UnvoteScope::Any } else { UnvoteScope::OnlyExpired };
 			Self::try_remove_vote(&target, index, scope)?;
-			Ok(())
+			Ok(0.into())
 		}
 
 		/// Delegate the voting power (with some given conviction) of a proxied account.
@@ -1343,7 +1344,7 @@ impl<T: Trait> Module<T> {
 				if let Some(approve) = vote.as_standard() {
 					status.tally.increase(approve, *delegations);
 				}
-				Ok(())
+				Ok(0.into())
 			} else {
 				Err(Error::<T>::AlreadyDelegating.into())
 			}
@@ -1357,7 +1358,7 @@ impl<T: Trait> Module<T> {
 			WithdrawReason::Transfer.into()
 		);
 		ReferendumInfoOf::<T>::insert(ref_index, ReferendumInfo::Ongoing(status));
-		Ok(())
+		Ok(0.into())
 	}
 
 	/// Remove the account's vote for the given referendum if possible. This is possible when:
@@ -1394,9 +1395,9 @@ impl<T: Trait> Module<T> {
 				}
 				votes.remove(i);
 			}
-			Ok(())
+			Ok(0.into())
 		})?;
-		Ok(())
+		Ok(0.into())
 	}
 
 	fn increase_upstream_delegation(who: &T::AccountId, amount: Delegations<BalanceOf<T>>) {
@@ -1478,10 +1479,10 @@ impl<T: Trait> Module<T> {
 				balance,
 				WithdrawReason::Transfer.into()
 			);
-			Ok(())
+			Ok(0.into())
 		})?;
 		Self::deposit_event(Event::<T>::Delegated(who, target));
-		Ok(())
+		Ok(0.into())
 	}
 
 	/// Attempt to end the current delegation.
@@ -1508,10 +1509,10 @@ impl<T: Trait> Module<T> {
 					return Err(Error::<T>::NotDelegating.into())
 				}
 			}
-			Ok(())
+			Ok(0.into())
 		})?;
 		Self::deposit_event(Event::<T>::Undelegated(who));
-		Ok(())
+		Ok(0.into())
 	}
 
 	/// Rejig the lock on an account. It will never get more stringent (since that would indicate
@@ -1554,7 +1555,7 @@ impl<T: Trait> Module<T> {
 				let ok = proposal.dispatch(frame_system::RawOrigin::Root.into()).is_ok();
 				Self::deposit_event(RawEvent::Executed(index, ok));
 
-				Ok(())
+				Ok(0.into())
 			} else {
 				T::Slash::on_unbalanced(T::Currency::slash_reserved(&who, amount).0);
 				Self::deposit_event(RawEvent::PreimageInvalid(proposal_hash, index));
@@ -1586,7 +1587,7 @@ impl<T: Trait> Module<T> {
 				threshold,
 				T::EnactmentPeriod::get(),
 			);
-			Ok(())
+			Ok(0.into())
 		} else {
 			Err(Error::<T>::NoneWaiting)?
 		}
@@ -1616,7 +1617,7 @@ impl<T: Trait> Module<T> {
 					T::EnactmentPeriod::get(),
 				);
 			}
-			Ok(())
+			Ok(0.into())
 		} else {
 			Err(Error::<T>::NoneWaiting)?
 		}
@@ -1673,6 +1674,6 @@ impl<T: Trait> Module<T> {
 		if used != 0 {
 			<DispatchQueue<T>>::put(&queue[used..]);
 		}
-		Ok(())
+		Ok(0.into())
 	}
 }

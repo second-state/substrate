@@ -159,7 +159,7 @@ decl_module! {
 				ensure!(&account == &who, Error::<T>::NotOwner);
 				let lost = T::Currency::repatriate_reserved(&who, &new, amount, Reserved)?;
 				*maybe_value = Some((new.clone(), amount.saturating_sub(lost)));
-				Ok(())
+				Ok(0.into())
 			})?;
 			Self::deposit_event(RawEvent::IndexAssigned(new, index));
 		}
@@ -188,7 +188,7 @@ decl_module! {
 				let (account, amount) = maybe_value.take().ok_or(Error::<T>::NotAssigned)?;
 				ensure!(&account == &who, Error::<T>::NotOwner);
 				T::Currency::unreserve(&who, amount);
-				Ok(())
+				Ok(0.into())
 			})?;
 			Self::deposit_event(RawEvent::IndexFreed(index));
 		}

@@ -49,7 +49,7 @@
 use sp_std::prelude::*;
 use sp_std::fmt::Debug;
 use codec::{Encode, Decode};
-use sp_runtime::{DispatchResult, RuntimeDebug, traits::{
+use sp_runtime::{RuntimeDebug, traits::{
 	StaticLookup, Zero, AtLeast32Bit, MaybeSerializeDeserialize, Convert
 }};
 use frame_support::{decl_module, decl_event, decl_storage, decl_error, ensure};
@@ -58,6 +58,7 @@ use frame_support::traits::{
 	ExistenceRequirement, Get
 };
 use frame_support::weights::SimpleDispatchInfo;
+use frame_support::dispatch::DispatchResult;
 use frame_system::{self as system, ensure_signed};
 
 #[cfg(feature = "runtime-benchmarks")]
@@ -254,7 +255,7 @@ decl_module! {
 			Self::add_vesting_schedule(&who, schedule.locked, schedule.per_block, schedule.starting_block)
 				.expect("user does not have an existing vesting schedule; q.e.d.");
 
-			Ok(())
+			Ok(0.into())
 		}
 	}
 }
@@ -276,7 +277,7 @@ impl<T: Trait> Module<T> {
 			T::Currency::set_lock(VESTING_ID, &who, locked_now, reasons);
 			Self::deposit_event(RawEvent::VestingUpdated(who, locked_now));
 		}
-		Ok(())
+		Ok(0.into())
 	}
 }
 
@@ -313,7 +314,7 @@ impl<T: Trait> VestingSchedule<T::AccountId> for Module<T> where
 		per_block: BalanceOf<T>,
 		starting_block: T::BlockNumber
 	) -> DispatchResult {
-		if locked.is_zero() { return Ok(()) }
+		if locked.is_zero() { return Ok(0.into()) }
 		if Vesting::<T>::contains_key(who) {
 			Err(Error::<T>::ExistingVestingSchedule)?
 		}
@@ -325,7 +326,7 @@ impl<T: Trait> VestingSchedule<T::AccountId> for Module<T> where
 		Vesting::<T>::insert(who, vesting_schedule);
 		// it can't fail, but even if somehow it did, we don't really care.
 		let _ = Self::update_lock(who.clone());
-		Ok(())
+		Ok(0.into())
 	}
 
 	/// Remove a vesting schedule for a given account.

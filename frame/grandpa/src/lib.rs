@@ -32,9 +32,11 @@ pub use sp_finality_grandpa as fg_primitives;
 
 use sp_std::prelude::*;
 use codec::{self as codec, Encode, Decode};
-use frame_support::{decl_event, decl_storage, decl_module, decl_error, storage};
+use frame_support::{
+	decl_event, decl_storage, decl_module, decl_error, storage, dispatch::DispatchResult
+};
 use sp_runtime::{
-	DispatchResult, generic::{DigestItem, OpaqueDigestItemId}, traits::Zero, Perbill,
+	generic::{DigestItem, OpaqueDigestItemId}, traits::Zero, Perbill,
 };
 use sp_staking::{
 	SessionIndex,
@@ -279,7 +281,7 @@ impl<T: Trait> Module<T> {
 				scheduled_at,
 			});
 
-			Ok(())
+			Ok(0.into())
 		} else {
 			Err(Error::<T>::PauseFailed)?
 		}
@@ -294,7 +296,7 @@ impl<T: Trait> Module<T> {
 				scheduled_at,
 			});
 
-			Ok(())
+			Ok(0.into())
 		} else {
 			Err(Error::<T>::ResumeFailed)?
 		}
@@ -339,7 +341,7 @@ impl<T: Trait> Module<T> {
 				forced,
 			});
 
-			Ok(())
+			Ok(0.into())
 		} else {
 			Err(Error::<T>::ChangePending)?
 		}

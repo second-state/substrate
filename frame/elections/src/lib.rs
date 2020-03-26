@@ -25,7 +25,7 @@
 
 use sp_std::prelude::*;
 use sp_runtime::{
-	RuntimeDebug, DispatchResult, print,
+	RuntimeDebug, print,
 	traits::{Zero, One, StaticLookup, Saturating},
 };
 use frame_support::{
@@ -34,7 +34,8 @@ use frame_support::{
 	traits::{
 		Currency, ExistenceRequirement, Get, LockableCurrency, LockIdentifier, BalanceStatus,
 		OnUnbalanced, ReservableCurrency, WithdrawReason, WithdrawReasons, ChangeMembers
-	}
+	},
+	dispatch::DispatchResult,
 };
 use codec::{Encode, Decode};
 use frame_system::{self as system, ensure_signed, ensure_root};
@@ -646,7 +647,7 @@ decl_module! {
 				leaderboard[0] = (total, candidate);
 				leaderboard.sort_by_key(|&(t, _)| t);
 				<Leaderboard<T>>::put(leaderboard);
-				Ok(())
+				Ok(0.into())
 			} else {
 				// we can rest assured it will be Ok since we checked `can_slash` earlier; still
 				// better safe than sorry.
@@ -790,10 +791,10 @@ impl<T: Trait> Module<T> {
 		}
 		if let Some((number, _, _)) = Self::next_finalize() {
 			if block_number == number {
-				Self::finalize_tally()?
+				Self::finalize_tally()?;
 			}
 		}
-		Ok(())
+		Ok(0.into())
 	}
 
 	/// Remove a voter at a specified index from the system.
@@ -909,7 +910,7 @@ impl<T: Trait> Module<T> {
 		);
 		Self::set_approvals_chunked(&who, votes);
 
-		Ok(())
+		Ok(0.into())
 	}
 
 	/// Close the voting, record the number of seats that are actually up for grabs.
@@ -1024,7 +1025,7 @@ impl<T: Trait> Module<T> {
 		<Candidates<T>>::put(new_candidates);
 		CandidateCount::put(count);
 		VoteCount::put(Self::vote_index() + 1);
-		Ok(())
+		Ok(0.into())
 	}
 
 	/// Get the set and vector index of a global voter index.
