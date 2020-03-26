@@ -15,9 +15,7 @@
 // along with Substrate.  If not, see <http://www.gnu.org/licenses/>.
 
 use structopt::StructOpt;
-use sc_service::{
-	Configuration, ChainSpecExtension, RuntimeGenesis,
-};
+use sc_service::Configuration;
 
 use sc_service::config::OffchainWorkerConfig;
 use structopt::clap::arg_enum;

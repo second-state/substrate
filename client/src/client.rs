@@ -155,6 +155,14 @@ pub fn new_in_mem<E, Block, S, RA>(
 	new_with_backend(Arc::new(in_mem::Backend::new()), executor, genesis_storage, keystore, spawn_handle, prometheus_registry)
 }
 
+#[derive(Debug,Clone,Default)]
+pub struct ClientConfig {
+	/// Enable the offchain worker db.
+	pub offchain_worker_enabled : bool,
+	/// If true, allows access from the runtime to write into offchain worker db.
+	pub offchain_indexing_api: bool,
+}
+
 /// Create a client with the explicitly provided backend.
 /// This is useful for testing backend implementations.
 pub fn new_with_backend<B, E, Block, S, RA>(
@@ -164,6 +172,7 @@ pub fn new_with_backend<B, E, Block, S, RA>(
 	keystore: Option<sp_core::traits::BareCryptoStorePtr>,
 	spawn_handle: Box<dyn CloneableSpawn>,
 	prometheus_registry: Option<Registry>,
+	config: ClientConfig,
 ) -> sp_blockchain::Result<Client<B, LocalCallExecutor<B, E>, Block, RA>>
 	where
 		E: CodeExecutor + RuntimeInfo,
@@ -172,8 +181,7 @@ pub fn new_with_backend<B, E, Block, S, RA>(
 		B: backend::LocalBackend<Block> + 'static,
 {
 	let call_executor = LocalCallExecutor::new(backend.clone(), executor, spawn_handle);
-	let config = Default::default();
-	let extensions = ExecutionExtensions::new(Default::default(), keystore, config);
+	let extensions = ExecutionExtensions::new(Default::default(), keystore);
 	Client::new(
 		backend,
 		call_executor,
@@ -182,6 +190,7 @@ pub fn new_with_backend<B, E, Block, S, RA>(
 		Default::default(),
 		extensions,
 		prometheus_registry,
+		config,
 	)
 }
 
@@ -261,6 +270,7 @@ impl<B, E, Block, RA> Client<B, E, Block, RA> where
 		bad_blocks: BadBlocks<Block>,
 		execution_extensions: ExecutionExtensions<Block>,
 		_prometheus_registry: Option<Registry>,
+		config: ClientConfig,
 	) -> sp_blockchain::Result<Self> {
 		if backend.blockchain().header(BlockId::Number(Zero::zero()))?.is_none() {
 			let genesis_storage = build_genesis_storage.build_storage()?;
