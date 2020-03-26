@@ -49,7 +49,7 @@ pub trait Trait: frame_system::Trait {
 	/// The overarching event type.
 	type Event: From<Event> + Into<<Self as frame_system::Trait>::Event>;
 	/// Full identification of the validator.
-	type IdentificationTuple: Parameter + Ord + Default;
+	type IdentificationTuple: Parameter + Ord;
 	/// A handler called for every offence report.
 	type OnOffenceHandler: OnOffenceHandler<Self::AccountId, Self::IdentificationTuple>;
 }
