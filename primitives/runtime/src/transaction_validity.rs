@@ -147,7 +147,10 @@ impl From<UnknownTransaction> for TransactionValidityError {
 }
 
 /// Information on a transaction's validity and, if valid, on how it relates to other transactions.
-pub type TransactionValidity = Result<ValidTransaction, TransactionValidityError>;
+pub type TransactionValidity = Result<
+	Option<ValidTransaction>,
+	TransactionValidityError,
+>;
 
 impl Into<TransactionValidity> for InvalidTransaction {
 	fn into(self) -> TransactionValidity {
@@ -158,6 +161,12 @@ impl Into<TransactionValidity> for InvalidTransaction {
 impl Into<TransactionValidity> for UnknownTransaction {
 	fn into(self) -> TransactionValidity {
 		Err(self.into())
+	}
+}
+
+impl Into<TransactionValidity> for ValidTransaction {
+	fn into(self) -> TransactionValidity {
+		Ok(Some(self))
 	}
 }
 
@@ -239,13 +248,20 @@ impl ValidTransaction {
 	/// Combine two instances into one, as a best effort. This will take the superset of each of the
 	/// `provides` and `requires` tags, it will sum the priorities, take the minimum longevity and
 	/// the logic *And* of the propagate flags.
-	pub fn combine_with(mut self, mut other: ValidTransaction) -> Self {
+	pub fn combine_with(mut self, mut other: Self) -> Self {
 		ValidTransaction {
 			priority: self.priority.saturating_add(other.priority),
 			requires: { self.requires.append(&mut other.requires); self.requires },
 			provides: { self.provides.append(&mut other.provides); self.provides },
 			longevity: self.longevity.min(other.longevity),
 			propagate: self.propagate && other.propagate,
+		}
+	}
+
+	pub fn combine(a: Option<Self>, b: Option<Self>) -> Option<Self> {
+		match (a, b) {
+			(Some(a), Some(b)) => Some(a.combine_with(b)),
+			(a, b) => a.or(b),
 		}
 	}
 }
@@ -256,13 +272,13 @@ mod tests {
 
 	#[test]
 	fn should_encode_and_decode() {
-		let v: TransactionValidity = Ok(ValidTransaction {
+		let v: TransactionValidity = ValidTransaction {
 			priority: 5,
 			requires: vec![vec![1, 2, 3, 4]],
 			provides: vec![vec![4, 5, 6]],
 			longevity: 42,
 			propagate: false,
-		});
+		}.into();
 
 		let encoded = v.encode();
 		assert_eq!(

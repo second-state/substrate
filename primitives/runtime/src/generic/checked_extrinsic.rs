@@ -44,7 +44,6 @@ where
 	Origin: From<Option<AccountId>>,
 	Info: Clone,
 {
-	type Call = Call;
 	type DispatchInfo = Info;
 
 	fn validate(

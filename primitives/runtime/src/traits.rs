@@ -694,7 +694,7 @@ pub trait SignedExtension: Codec + Debug + Sync + Send + Clone + Eq + PartialEq 
 		_info: Self::DispatchInfo,
 		_len: usize,
 	) -> TransactionValidity {
-		Ok(ValidTransaction::default())
+		Ok(None)
 	}
 
 	/// Do any pre-flight stuff for a signed transaction.
@@ -731,7 +731,7 @@ pub trait SignedExtension: Codec + Debug + Sync + Send + Clone + Eq + PartialEq 
 		_info: Self::DispatchInfo,
 		_len: usize,
 	) -> TransactionValidity {
-		Ok(ValidTransaction::default())
+		Ok(None)
 	}
 
 	/// Do any pre-flight stuff for a unsigned transaction.
@@ -789,9 +789,12 @@ impl<AccountId, Call, Info: Clone> SignedExtension for Tuple {
 		info: Self::DispatchInfo,
 		len: usize,
 	) -> TransactionValidity {
-		let valid = ValidTransaction::default();
+		let valid = None;
 		for_tuples!( #(
-			let valid = valid.combine_with(Tuple.validate(who, source, call, info.clone(), len)?);
+			let valid = ValidTransaction::combine(
+				valid,
+				Tuple.validate(who, source, call, info.clone(), len)?
+			);
 		)* );
 		Ok(valid)
 	}
@@ -808,9 +811,10 @@ impl<AccountId, Call, Info: Clone> SignedExtension for Tuple {
 		info: Self::DispatchInfo,
 		len: usize,
 	) -> TransactionValidity {
-		let valid = ValidTransaction::default();
+		let valid = None;
 		for_tuples!( #(
-			let valid = valid.combine_with(
+			let valid = ValidTransaction::combine(
+				valid,
 				Tuple::validate_unsigned(source, call, info.clone(), len)?
 			);
 		)* );
@@ -859,9 +863,6 @@ impl SignedExtension for () {
 /// Also provides information on to whom this information is attributable and an index that allows
 /// each piece of attributable information to be disambiguated.
 pub trait Applyable: Sized + Send + Sync {
-	/// Type by which we can dispatch. Restricts the `UnsignedValidator` type.
-	type Call;
-
 	/// An opaque set of information attached to the transaction.
 	type DispatchInfo: Clone;
 

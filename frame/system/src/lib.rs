@@ -1247,7 +1247,10 @@ impl<T: Trait + Send + Sync> CheckWeight<T> {
 		let _ = Self::check_block_length(info, len)?;
 		let _ = Self::check_weight(info)?;
 
-		Ok(ValidTransaction { priority: Self::get_priority(info), ..Default::default() })
+		ValidTransaction {
+			priority: Self::get_priority(info),
+			..Default::default()
+		}.into()
 	}
 }
 
@@ -1442,13 +1445,13 @@ impl<T: Trait> SignedExtension for CheckNonce<T> {
 			vec![]
 		};
 
-		Ok(ValidTransaction {
+		ValidTransaction {
 			priority: info.weight as TransactionPriority,
 			requires,
 			provides,
 			longevity: TransactionLongevity::max_value(),
 			propagate: true,
-		})
+		}.into()
 	}
 }
 
@@ -1499,10 +1502,10 @@ impl<T: Trait + Send + Sync> SignedExtension for CheckEra<T> {
 	) -> TransactionValidity {
 		let current_u64 = <Module<T>>::block_number().saturated_into::<u64>();
 		let valid_till = self.0.death(current_u64);
-		Ok(ValidTransaction {
+		ValidTransaction {
 			longevity: valid_till.saturating_sub(current_u64),
 			..Default::default()
-		})
+		}.into()
 	}
 
 	fn additional_signed(&self) -> Result<Self::AdditionalSigned, TransactionValidityError> {

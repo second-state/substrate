@@ -350,7 +350,6 @@ impl<Origin, Call, Extra, Info> Applyable for TestXt<Call, Extra> where
 	Origin: From<Option<u64>>,
 	Info: Clone,
 {
-	type Call = Call;
 	type DispatchInfo = Info;
 
 	/// Checks to see if this is a valid *transaction*. It returns information on it if so.

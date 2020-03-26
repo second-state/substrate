@@ -242,11 +242,12 @@ impl<T: Trait + Send + Sync> SignedExtension for ChargeTransactionPayment<T>
 				.chain(Some(imbalances.1)));
 		}
 
-		let mut r = ValidTransaction::default();
-		// NOTE: we probably want to maximize the _fee (of any type) per weight unit_ here, which
-		// will be a bit more than setting the priority to tip. For now, this is enough.
-		r.priority = fee.saturated_into::<TransactionPriority>();
-		Ok(r)
+		ValidTransaction {
+			// NOTE: we probably want to maximize the _fee (of any type) per weight unit_ here,
+			// which will be a bit more than setting the priority to tip. For now, this is enough.
+			priority: fee.saturated_into::<TransactionPriority>(),
+			..Default::default()
+		}.into()
 	}
 }
 

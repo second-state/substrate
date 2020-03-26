@@ -644,9 +644,10 @@ impl<T: Trait + Send + Sync> SignedExtension for WatchDummy<T> {
 			Call::set_dummy(..) => {
 				sp_runtime::print("set_dummy was received.");
 
-				let mut valid_tx = ValidTransaction::default();
-				valid_tx.priority = Bounded::max_value();
-				Ok(valid_tx)
+				ValidTransaction {
+					priority: Bounded::max_value(),
+					..Default::default()
+				}.into()
 			}
 			_ => Ok(Default::default()),
 		}
@@ -812,6 +813,7 @@ mod tests {
 
 			assert_eq!(
 				WatchDummy::<Test>(PhantomData).validate(&1, source, &call, info, 150)
+					.unwrap()
 					.unwrap()
 					.priority,
 				Bounded::max_value(),

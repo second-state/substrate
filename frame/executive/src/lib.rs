@@ -88,8 +88,8 @@ pub trait ExecuteBlock<Block: BlockT> {
 }
 
 pub type CheckedOf<E, C> = <E as Checkable<C>>::Checked;
-pub type CallOf<E, C> = <CheckedOf<E, C> as Applyable>::Call;
-pub type OriginOf<E, C> = <CallOf<E, C> as Dispatchable>::Origin;
+//pub type CallOf<E, C> = <CheckedOf<E, C> as Applyable>::Call;
+//pub type OriginOf<E, C> = <CallOf<E, C> as Dispatchable>::Origin;
 
 pub struct Executive<System, Block, Context, AllModules>(
 	PhantomData<(System, Block, Context, AllModules)>
@@ -110,8 +110,8 @@ where
 	CheckedOf<Block::Extrinsic, Context>:
 		Applyable<DispatchInfo=DispatchInfo> +
 		GetDispatchInfo,
-	CallOf<Block::Extrinsic, Context>: Dispatchable,
-	OriginOf<Block::Extrinsic, Context>: From<Option<System::AccountId>>,
+	//CallOf<Block::Extrinsic, Context>: Dispatchable,
+	//OriginOf<Block::Extrinsic, Context>: From<Option<System::AccountId>>,
 {
 	fn execute_block(block: Block) {
 		Executive::<System, Block, Context, AllModules>::execute_block(block);
@@ -133,8 +133,8 @@ where
 	CheckedOf<Block::Extrinsic, Context>:
 		Applyable<DispatchInfo=DispatchInfo> +
 		GetDispatchInfo,
-	CallOf<Block::Extrinsic, Context>: Dispatchable,
-	OriginOf<Block::Extrinsic, Context>: From<Option<System::AccountId>>,
+	//CallOf<Block::Extrinsic, Context>: Dispatchable,
+	//OriginOf<Block::Extrinsic, Context>: From<Option<System::AccountId>>,
 {
 	/// Start the execution of a particular block.
 	pub fn initialize_block(header: &System::Header) {
