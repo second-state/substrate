@@ -105,6 +105,7 @@ pub struct Client<B, E, Block, RA> where Block: BlockT {
 	importing_block: RwLock<Option<Block::Hash>>,
 	block_rules: BlockRules<Block>,
 	execution_extensions: ExecutionExtensions<Block>,
+	config: ClientConfig,
 	_phantom: PhantomData<RA>,
 }
 
@@ -142,6 +143,7 @@ pub fn new_in_mem<E, Block, S, RA>(
 	keystore: Option<sp_core::traits::BareCryptoStorePtr>,
 	prometheus_registry: Option<Registry>,
 	spawn_handle: Box<dyn CloneableSpawn>,
+	config: ClientConfig,
 ) -> sp_blockchain::Result<Client<
 	in_mem::Backend<Block>,
 	LocalCallExecutor<in_mem::Backend<Block>, E>,
@@ -152,7 +154,14 @@ pub fn new_in_mem<E, Block, S, RA>(
 	S: BuildStorage,
 	Block: BlockT,
 {
-	new_with_backend(Arc::new(in_mem::Backend::new()), executor, genesis_storage, keystore, spawn_handle, prometheus_registry)
+	new_with_backend(
+		Arc::new(in_mem::Backend::new()),
+		executor,
+		genesis_storage,
+		keystore,
+		spawn_handle,
+		prometheus_registry,
+		config)
 }
 
 #[derive(Debug,Clone,Default)]
@@ -301,6 +310,7 @@ impl<B, E, Block, RA> Client<B, E, Block, RA> where
 			importing_block: Default::default(),
 			block_rules: BlockRules::new(fork_blocks, bad_blocks),
 			execution_extensions,
+			config,
 			_phantom: Default::default(),
 		})
 	}

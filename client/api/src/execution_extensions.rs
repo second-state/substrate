@@ -104,7 +104,6 @@ impl<Block: traits::Block> ExecutionExtensions<Block> {
     pub fn new(
         strategies: ExecutionStrategies,
         keystore: Option<BareCryptoStorePtr>,
-        config: ExecutionExtensionsConfig
     ) -> Self {
         let transaction_pool = RwLock::new(None);
         let extensions_factory = Box::new(());
@@ -113,7 +112,6 @@ impl<Block: traits::Block> ExecutionExtensions<Block> {
             keystore,
             extensions_factory: RwLock::new(extensions_factory),
 			transaction_pool,
-			config,
         }
 	}
 

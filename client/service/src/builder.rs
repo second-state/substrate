@@ -33,6 +33,7 @@ use futures::{
 	channel::mpsc,
 	future::ready,
 };
+
 use sc_keystore::{Store as Keystore};
 use log::{info, warn, error};
 use sc_network::config::{FinalityProofProvider, OnDemand, BoxFinalityProofRequestBuilder};
@@ -256,10 +257,6 @@ fn new_full_parts<TBl, TRtApi, TExecDisp>(
         let extensions = sc_client_api::execution_extensions::ExecutionExtensions::new(
 			config.execution_strategies.clone(),
 			Some(keystore.clone()),
-			sc_client_api::execution_extensions::ExecutionExtensionsConfig::new(
-				config.offchain_worker.enabled,
-				config.offchain_worker.indexing_enabled
-			),
 		);
 
         sc_client_db::new_client(
