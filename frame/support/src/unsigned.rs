@@ -18,7 +18,7 @@
 pub use crate::sp_runtime::traits::ValidateUnsigned;
 #[doc(hidden)]
 pub use crate::sp_runtime::transaction_validity::{
-	TransactionValidity, UnknownTransaction, TransactionValidityError, TransactionSource,
+	TransactionValidity, InvalidTransaction, TransactionValidityError, TransactionSource,
 };
 
 
@@ -87,7 +87,7 @@ macro_rules! impl_outer_validate_unsigned {
 				#[allow(unreachable_patterns)]
 				match call {
 					$( Call::$module(inner_call) => $module::validate_unsigned(source, inner_call), )*
-					_ => $crate::unsigned::UnknownTransaction::NoUnsignedValidator.into(),
+					_ => $crate::unsigned::InvalidTransaction::NoValidityInfo.into(),
 				}
 			}
 		}

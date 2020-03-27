@@ -116,7 +116,7 @@ use sp_runtime::{
 	traits::{Hash, StaticLookup, Zero, MaybeSerializeDeserialize, Member, SignedExtension},
 	transaction_validity::{
 		ValidTransaction, InvalidTransaction, TransactionValidity, TransactionValidityError,
-		TransactionSource,
+		TransactionSource, OptionalTransactionValidity,
 	},
 	RuntimeDebug,
 };
@@ -1104,7 +1104,7 @@ impl<T: Trait + Send + Sync> SignedExtension for CheckBlockGasLimit<T> {
 		call: &Self::Call,
 		_: Self::DispatchInfo,
 		_: usize,
-	) -> TransactionValidity {
+	) -> OptionalTransactionValidity {
 		let call = match call.is_sub_type() {
 			Some(call) => call,
 			None => return ValidTransaction::default().into(),

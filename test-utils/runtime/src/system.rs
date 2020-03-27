@@ -178,13 +178,13 @@ pub fn validate_transaction(utx: Extrinsic) -> TransactionValidity {
 
 	let provides = vec![encode(&tx.from, tx.nonce)];
 
-	ValidTransaction {
+	Ok(ValidTransaction {
 		priority: tx.amount,
 		requires,
 		provides,
 		longevity: 64,
 		propagate: true,
-	}.into()
+	})
 }
 
 /// Execute a transaction outside of the block execution function.

@@ -28,8 +28,8 @@ use serde::{Serialize, Deserialize, de::DeserializeOwned};
 use sp_core::{self, Hasher, TypeId, RuntimeDebug};
 use crate::codec::{Codec, Encode, Decode};
 use crate::transaction_validity::{
-	ValidTransaction, TransactionSource, TransactionValidity, TransactionValidityError,
-	UnknownTransaction,
+	ValidTransaction, TransactionSource, TransactionValidity, OptionalTransactionValidity,
+	TransactionValidityError, UnknownTransaction,
 };
 use crate::generic::{Digest, DigestItem};
 pub use sp_arithmetic::traits::{
@@ -693,7 +693,7 @@ pub trait SignedExtension: Codec + Debug + Sync + Send + Clone + Eq + PartialEq 
 		_call: &Self::Call,
 		_info: Self::DispatchInfo,
 		_len: usize,
-	) -> TransactionValidity {
+	) -> OptionalTransactionValidity {
 		Ok(None)
 	}
 
@@ -730,7 +730,7 @@ pub trait SignedExtension: Codec + Debug + Sync + Send + Clone + Eq + PartialEq 
 		_call: &Self::Call,
 		_info: Self::DispatchInfo,
 		_len: usize,
-	) -> TransactionValidity {
+	) -> OptionalTransactionValidity {
 		Ok(None)
 	}
 
@@ -746,9 +746,9 @@ pub trait SignedExtension: Codec + Debug + Sync + Send + Clone + Eq + PartialEq 
 		call: &Self::Call,
 		info: Self::DispatchInfo,
 		len: usize,
-	) -> Result<Self::Pre, TransactionValidityError> {
+	) -> Result<Option<Self::Pre>, TransactionValidityError> {
 		Self::validate_unsigned(TransactionSource::InBlock, call, info.clone(), len)
-			.map(|_| Self::Pre::default())
+			.map(|res| res.map(|_| Self::Pre::default()))
 			.map_err(Into::into)
 	}
 
@@ -788,7 +788,7 @@ impl<AccountId, Call, Info: Clone> SignedExtension for Tuple {
 		call: &Self::Call,
 		info: Self::DispatchInfo,
 		len: usize,
-	) -> TransactionValidity {
+	) -> OptionalTransactionValidity {
 		let valid = None;
 		for_tuples!( #(
 			let valid = ValidTransaction::combine(
@@ -810,7 +810,7 @@ impl<AccountId, Call, Info: Clone> SignedExtension for Tuple {
 		call: &Self::Call,
 		info: Self::DispatchInfo,
 		len: usize,
-	) -> TransactionValidity {
+	) -> OptionalTransactionValidity {
 		let valid = None;
 		for_tuples!( #(
 			let valid = ValidTransaction::combine(
@@ -825,8 +825,24 @@ impl<AccountId, Call, Info: Clone> SignedExtension for Tuple {
 		call: &Self::Call,
 		info: Self::DispatchInfo,
 		len: usize,
-	) -> Result<Self::Pre, TransactionValidityError> {
-		Ok(for_tuples!( ( #( Tuple::pre_dispatch_unsigned(call, info.clone(), len)? ),* ) ))
+	) -> Result<Option<Self::Pre>, TransactionValidityError> {
+		let mut all_none = true;
+		let res = for_tuples!((
+			#(
+				Tuple::pre_dispatch_unsigned(call, info.clone(), len)?
+					.map_or_else(Default::default, |v| {
+						all_none = false;
+						v
+					})
+			),*
+		));
+
+		// Pre-dispatch returns `None` only if ALL elements of the tuple are `None`.
+		Ok(if all_none {
+			None
+		} else {
+			Some(res)
+		})
 	}
 
 	fn post_dispatch(

@@ -42,7 +42,7 @@ use sp_runtime::{
 	Fixed64,
 	transaction_validity::{
 		TransactionPriority, ValidTransaction, InvalidTransaction, TransactionValidityError,
-		TransactionValidity, TransactionSource,
+		TransactionValidity, OptionalTransactionValidity, TransactionSource,
 	},
 	traits::{Zero, Saturating, SignedExtension, SaturatedConversion, Convert},
 };
@@ -218,7 +218,7 @@ impl<T: Trait + Send + Sync> SignedExtension for ChargeTransactionPayment<T>
 		_call: &Self::Call,
 		info: Self::DispatchInfo,
 		len: usize,
-	) -> TransactionValidity {
+	) -> OptionalTransactionValidity {
 		// pay any fees.
 		let tip = self.0;
 		let fee = Self::compute_fee(len as u32, info, tip);

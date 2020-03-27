@@ -20,7 +20,7 @@
 use crate::traits::{
 	self, Member, MaybeDisplay, SignedExtension, Dispatchable,
 };
-use crate::transaction_validity::{TransactionValidity, TransactionSource};
+use crate::transaction_validity::{TransactionValidity, TransactionSource, InvalidTransaction};
 
 /// Definition of something that the external world might want to say; its
 /// existence implies that it has been checked and is good, particularly with
@@ -53,9 +53,17 @@ where
 		len: usize,
 	) -> TransactionValidity {
 		if let Some((ref id, ref extra)) = self.signed {
-			Extra::validate(extra, id, source, &self.function, info, len)
+			// To maintain backward compatibility, if there is no `SignedExtension`
+			// interested in a particular extrinsic we return default value of
+			// `ValidTransaction`.
+			// Note however that such transaction will not be accepted to the default pool,
+			// but if we ever see a block containing the transaction it is going to
+			// be accepted (see `pre_dispatch` in `apply`).
+			Ok(Extra::validate(extra, id, source, &self.function, info, len)?
+				.unwrap_or_default())
 		} else {
-			Extra::validate_unsigned(source, &self.function, info, len)
+			Extra::validate_unsigned(source, &self.function, info, len)?
+				.ok_or_else(|| InvalidTransaction::NoValidityInfo.into())
 		}
 	}
 
@@ -68,11 +76,22 @@ where
 			let pre = Extra::pre_dispatch(extra, &id, &self.function, info.clone(), len)?;
 			(Some(id), pre)
 		} else {
-			let pre = Extra::pre_dispatch_unsigned(&self.function, info.clone(), len)?;
+			let pre = Extra::pre_dispatch_unsigned(&self.function, info.clone(), len)?
+				.ok_or(InvalidTransaction::NoValidityInfo)?;
 			(None, pre)
 		};
 		let res = self.function.dispatch(Origin::from(maybe_who));
 		Extra::post_dispatch(pre, info.clone(), len);
 		Ok(res.map_err(Into::into))
+	}
+}
+
+#[cfg(test)]
+mod tests {
+	use super::*;
+
+	#[test]
+	fn should_test_unsigned_logic() {
+		assert_eq!(true, false)
 	}
 }

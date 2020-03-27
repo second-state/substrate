@@ -52,6 +52,8 @@ pub enum InvalidTransaction {
 	ExhaustsResources,
 	/// Any other custom invalid validity that is not covered by this enum.
 	Custom(u8),
+	/// None of the validators provided any validity information.
+	NoValidityInfo,
 }
 
 impl InvalidTransaction {
@@ -77,33 +79,46 @@ impl From<InvalidTransaction> for &'static str {
 			InvalidTransaction::Payment =>
 				"Inability to pay some fees (e.g. account balance too low)",
 			InvalidTransaction::Custom(_) => "InvalidTransaction custom error",
+			InvalidTransaction::NoValidityInfo =>
+				"A whitelisting validation logic was not found for this transaction. \
+It's disallowed by default."
 		}
 	}
 }
 
-/// An unknown transaction validity.
-#[derive(Clone, PartialEq, Eq, Encode, Decode, Copy, RuntimeDebug)]
-#[cfg_attr(feature = "std", derive(serde::Serialize))]
-pub enum UnknownTransaction {
-	/// Could not lookup some information that is required to validate the transaction.
-	CannotLookup,
-	/// No validator found for the given unsigned transaction.
-	NoUnsignedValidator,
-	/// Any other custom unknown validity that is not covered by this enum.
-	Custom(u8),
-}
+#[allow(deprecated)] // NoUnsignedValidator in generated code.
+mod unknown {
+	use super::*;
 
-impl From<UnknownTransaction> for &'static str {
-	fn from(unknown: UnknownTransaction) -> &'static str {
-		match unknown {
-			UnknownTransaction::CannotLookup =>
-				"Could not lookup information required to validate the transaction",
-			UnknownTransaction::NoUnsignedValidator =>
-				"Could not find an unsigned validator for the unsigned transaction",
-			UnknownTransaction::Custom(_) => "UnknownTransaction custom error",
+	/// An unknown transaction validity.
+	#[derive(Clone, PartialEq, Eq, Encode, Decode, Copy, RuntimeDebug)]
+	#[cfg_attr(feature = "std", derive(serde::Serialize))]
+	pub enum UnknownTransaction {
+		/// Could not lookup some information that is required to validate the transaction.
+		CannotLookup,
+		/// No validator found for the given unsigned transaction.
+		///
+		/// This item is not used any more, only left to maintain backward compatibility
+		/// with existing changes that might return this value.
+		#[deprecated]
+		NoUnsignedValidator,
+		/// Any other custom unknown validity that is not covered by this enum.
+		Custom(u8),
+	}
+
+	impl From<UnknownTransaction> for &'static str {
+		fn from(unknown: UnknownTransaction) -> &'static str {
+			match unknown {
+				UnknownTransaction::CannotLookup =>
+					"Could not lookup information required to validate the transaction",
+				UnknownTransaction::NoUnsignedValidator =>
+					"Could not find an unsigned validator for the unsigned transaction",
+				UnknownTransaction::Custom(_) => "UnknownTransaction custom error",
+			}
 		}
 	}
 }
+pub use unknown::UnknownTransaction;
 
 /// Errors that can occur while checking the validity of a transaction.
 #[derive(Clone, PartialEq, Eq, Encode, Decode, Copy, RuntimeDebug)]
@@ -147,7 +162,11 @@ impl From<UnknownTransaction> for TransactionValidityError {
 }
 
 /// Information on a transaction's validity and, if valid, on how it relates to other transactions.
-pub type TransactionValidity = Result<
+pub type TransactionValidity = Result<ValidTransaction, TransactionValidityError>;
+
+// TODO [ToDr] docs, and change `validate_usinged` to use this type.
+// How to solve pre_dispatch to fail in case there is no unsigned validator?
+pub type OptionalTransactionValidity = Result<
 	Option<ValidTransaction>,
 	TransactionValidityError,
 >;
@@ -166,6 +185,24 @@ impl Into<TransactionValidity> for UnknownTransaction {
 
 impl Into<TransactionValidity> for ValidTransaction {
 	fn into(self) -> TransactionValidity {
+		Ok(self)
+	}
+}
+
+impl Into<OptionalTransactionValidity> for InvalidTransaction {
+	fn into(self) -> OptionalTransactionValidity {
+		Err(self.into())
+	}
+}
+
+impl Into<OptionalTransactionValidity> for UnknownTransaction {
+	fn into(self) -> OptionalTransactionValidity {
+		Err(self.into())
+	}
+}
+
+impl Into<OptionalTransactionValidity> for ValidTransaction {
+	fn into(self) -> OptionalTransactionValidity {
 		Ok(Some(self))
 	}
 }
@@ -272,13 +309,13 @@ mod tests {
 
 	#[test]
 	fn should_encode_and_decode() {
-		let v: TransactionValidity = ValidTransaction {
+		let v: TransactionValidity = Ok(ValidTransaction {
 			priority: 5,
 			requires: vec![vec![1, 2, 3, 4]],
 			provides: vec![vec![4, 5, 6]],
 			longevity: 42,
 			propagate: false,
-		}.into();
+		});
 
 		let encoded = v.encode();
 		assert_eq!(

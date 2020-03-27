@@ -269,7 +269,7 @@ use sp_runtime::{
 	traits::{SignedExtension, Bounded, SaturatedConversion},
 	transaction_validity::{
 		ValidTransaction, TransactionValidityError, InvalidTransaction, TransactionValidity,
-		TransactionSource,
+		TransactionSource, OptionalTransactionValidity,
 	},
 };
 
@@ -633,7 +633,7 @@ impl<T: Trait + Send + Sync> SignedExtension for WatchDummy<T> {
 		call: &Self::Call,
 		_info: Self::DispatchInfo,
 		len: usize,
-	) -> TransactionValidity {
+	) -> OptionalTransactionValidity {
 		// if the transaction is too big, just drop it.
 		if len > 200 {
 			return InvalidTransaction::ExhaustsResources.into()

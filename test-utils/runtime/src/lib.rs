@@ -688,13 +688,13 @@ cfg_if! {
 					utx: <Block as BlockT>::Extrinsic,
 				) -> TransactionValidity {
 					if let Extrinsic::IncludeData(data) = utx {
-						return ValidTransaction{
+						return Ok(ValidTransaction{
 							priority: data.len() as u64,
 							requires: vec![],
 							provides: vec![data],
 							longevity: 1,
 							propagate: false,
-						}.into();
+						});
 					}
 
 					system::validate_transaction(utx)

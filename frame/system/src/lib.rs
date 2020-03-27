@@ -103,7 +103,7 @@ use sp_runtime::{
 	generic::{self, Era},
 	transaction_validity::{
 		ValidTransaction, TransactionPriority, TransactionLongevity, TransactionValidityError,
-		InvalidTransaction, TransactionValidity, TransactionSource,
+		InvalidTransaction, TransactionSource, TransactionValidity, OptionalTransactionValidity,
 	},
 	traits::{
 		self, CheckEqual, AtLeast32Bit, Zero, SignedExtension, Lookup, LookupError,
@@ -1247,10 +1247,10 @@ impl<T: Trait + Send + Sync> CheckWeight<T> {
 		let _ = Self::check_block_length(info, len)?;
 		let _ = Self::check_weight(info)?;
 
-		ValidTransaction {
+		Ok(ValidTransaction {
 			priority: Self::get_priority(info),
 			..Default::default()
-		}.into()
+		})
 	}
 }
 
@@ -1281,16 +1281,18 @@ impl<T: Trait + Send + Sync> SignedExtension for CheckWeight<T> {
 		_call: &Self::Call,
 		info: Self::DispatchInfo,
 		len: usize,
-	) -> TransactionValidity {
+	) -> OptionalTransactionValidity {
 		Self::do_validate(info, len)
+			.map(Some)
 	}
 
 	fn pre_dispatch_unsigned(
 		_call: &Self::Call,
 		info: Self::DispatchInfo,
 		len: usize,
-	) -> Result<(), TransactionValidityError> {
+	) -> Result<Option<()>, TransactionValidityError> {
 		Self::do_pre_dispatch(info, len)
+			.map(|_| None)
 	}
 
 	fn validate_unsigned(
@@ -1298,8 +1300,12 @@ impl<T: Trait + Send + Sync> SignedExtension for CheckWeight<T> {
 		_call: &Self::Call,
 		info: Self::DispatchInfo,
 		len: usize,
-	) -> TransactionValidity {
+	) -> OptionalTransactionValidity {
+		// TODO [ToDr] We ignore `priority` information here.
+		// UnsignedTransactions should be fully handled by the particular module
+		// that is responsible for them.
 		Self::do_validate(info, len)
+			.map(|_| None)
 	}
 }
 
@@ -1343,8 +1349,9 @@ impl<T> SignedExtension for ValidateUnsigned<T> where
 		call: &Self::Call,
 		_info: Self::DispatchInfo,
 		_len: usize,
-	) -> Result<Self::Pre, TransactionValidityError> {
+	) -> Result<Option<Self::Pre>, TransactionValidityError> {
 		<T as traits::ValidateUnsigned>::pre_dispatch(call)
+			.map(Some)
 	}
 
 	fn validate_unsigned(
@@ -1352,8 +1359,9 @@ impl<T> SignedExtension for ValidateUnsigned<T> where
 		call: &Self::Call,
 		_info: Self::DispatchInfo,
 		_len: usize,
-	) -> TransactionValidity {
+	) -> OptionalTransactionValidity {
 		<T as traits::ValidateUnsigned>::validate_unsigned(source, call)
+			.map(Some)
 	}
 }
 
@@ -1431,11 +1439,11 @@ impl<T: Trait> SignedExtension for CheckNonce<T> {
 		_call: &Self::Call,
 		info: Self::DispatchInfo,
 		_len: usize,
-	) -> TransactionValidity {
+	) -> OptionalTransactionValidity {
 		// check index
 		let account = Account::<T>::get(who);
 		if self.0 < account.nonce {
-			return InvalidTransaction::Stale.into()
+			return Err(InvalidTransaction::Stale.into())
 		}
 
 		let provides = vec![Encode::encode(&(who, self.0))];
@@ -1499,7 +1507,7 @@ impl<T: Trait + Send + Sync> SignedExtension for CheckEra<T> {
 		_call: &Self::Call,
 		_info: Self::DispatchInfo,
 		_len: usize,
-	) -> TransactionValidity {
+	) -> OptionalTransactionValidity {
 		let current_u64 = <Module<T>>::block_number().saturated_into::<u64>();
 		let valid_till = self.0.death(current_u64);
 		ValidTransaction {
