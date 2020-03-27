@@ -1990,11 +1990,13 @@ mod tests {
 			let priority = CheckWeight::<Test>(PhantomData)
 				.validate(&1, source, CALL, normal, len)
 				.unwrap()
+				.unwrap()
 				.priority;
 			assert_eq!(priority, 100);
 
 			let priority = CheckWeight::<Test>(PhantomData)
 				.validate(&1, source, CALL, op, len)
+				.unwrap()
 				.unwrap()
 				.priority;
 			assert_eq!(priority, u64::max_value());
@@ -2054,7 +2056,10 @@ mod tests {
 			System::set_block_number(17);
 			<BlockHash<Test>>::insert(16, H256::repeat_byte(1));
 
-			assert_eq!(ext.validate(&1, source, CALL, normal, len).unwrap().longevity, 15);
+			assert_eq!(
+				ext.validate(&1, source, CALL, normal, len).unwrap().unwrap().longevity,
+				15
+			);
 		})
 	}
 
